@@ -190,3 +190,15 @@ CREATE TABLE `t_link_stats_today`
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_unique_today_stats` (`full_short_url`,`date`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_mail_code`;
+CREATE TABLE `t_mail_code` (
+   `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+   `mail` VARCHAR(512) NOT NULL COMMENT '邮箱地址',
+   `code` VARCHAR(6) NOT NULL COMMENT '验证码',
+   `create_time` DATETIME NOT NULL COMMENT '创建时间',
+   `expire_time` DATETIME NOT NULL COMMENT '过期时间',
+   `used` TINYINT(1) DEFAULT 0 COMMENT '是否已使用 0：未使用 1：已使用',
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `idx_unique_email_code` (`email`, `code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

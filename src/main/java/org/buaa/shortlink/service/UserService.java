@@ -16,4 +16,10 @@ public interface UserService extends IService<UserDO> {
      * @return 用户返回实体
      */
     UserRespDTO getUserByUsername(String username);
+
+    /**
+     * 发送验证码
+     */
+    Boolean sendCode(String mail);
+
 }
