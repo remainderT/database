@@ -3,6 +3,7 @@ package org.buaa.shortlink.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.UUID;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_NULL;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_PASSWORD_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_REPEATED_LOGIN;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_TOKEN_NULL;
 
 /**
  * 用户接口实现层
@@ -153,6 +155,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         userTokenMapper.insert(userTokenDO);
         return new UserLoginRespDTO(uuid);
     }
+
+    @Override
+    public void logout(String username, String token) {
+        if (checkLogin(username, token)) {
+            LambdaUpdateWrapper<UserTokenDO> updateWrapper = Wrappers.lambdaUpdate(UserTokenDO.class)
+                    .eq(UserTokenDO::getUsername, username)
+                    .eq(UserTokenDO::getToken, token)
+                    .gt(UserTokenDO::getExpireTime, new Date())
+                    .eq(UserTokenDO::getDelFlag, 0);
+            UserTokenDO userTokenDO= UserTokenDO.builder()
+                    .build();
+            userTokenDO.setDelFlag(1);
+            userTokenMapper.update(userTokenDO, updateWrapper);
+            return;
+        }
+        throw new ClientException(USER_TOKEN_NULL);
+    }
+
 
     @Override
     public Boolean checkLogin(String username, String token) {

@@ -8,6 +8,7 @@ import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
 import org.buaa.shortlink.dto.resp.UserLoginRespDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
 import org.buaa.shortlink.service.UserService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,6 +64,15 @@ public class UserController {
     @PostMapping("/api/short-link/user/login")
     public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO requestParam) {
         return Results.success(userService.login(requestParam));
+    }
+
+    /**
+     * 用户退出登录
+     */
+    @DeleteMapping("/api/short-link/user/logout")
+    public Result<Void> logout(@RequestParam("username") String username, @RequestParam("token") String token) {
+        userService.logout(username, token);
+        return Results.success();
     }
 
     /**
