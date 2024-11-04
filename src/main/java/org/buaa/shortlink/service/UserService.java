@@ -22,4 +22,13 @@ public interface UserService extends IService<UserDO> {
      */
     Boolean sendCode(String mail);
 
+    /**
+     * 查询用户名是否存在
+     *
+     * @param username
+     * @return
+     */
+    Boolean hasUsername(String username);
+
+
 }

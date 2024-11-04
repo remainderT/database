@@ -29,12 +29,21 @@ public class UserController {
     }
 
     /**
+     * 查询用户名是否存在
+     */
+    @GetMapping("/api/short-link/user/has-username")
+    public Result<Boolean> hasUsername(@RequestParam("username") String username) {
+        return Results.success(userService.hasUsername(username));
+    }
+
+    /**
      * 发送验证码
      */
     @PostMapping("/api/short-link/user/send-code")
     public Result<Boolean> sendCode(@RequestParam("mail") String mail) {
         return Results.success(userService.sendCode(mail));
     }
+
 
 
 }
