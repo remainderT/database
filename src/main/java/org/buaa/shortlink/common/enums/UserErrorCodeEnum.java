@@ -15,6 +15,10 @@ public enum UserErrorCodeEnum implements IErrorCode {
 
     USER_CODE_ERROR("A000104", "验证码错误"),
 
+    USER_CODE_NULL("A000105", "验证码为空"),
+
+    USER_CODE_EXPIRED("A000106", "验证码已过期"),
+
     USER_NAME_NULL("A000201", "用户名不存在"),
 
     USER_PASSWORD_ERROR("A000202", "密码错误"),

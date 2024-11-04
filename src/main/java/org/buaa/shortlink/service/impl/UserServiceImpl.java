@@ -1,20 +1,24 @@
 package org.buaa.shortlink.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.common.consts.MailSendConstants;
+import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.dao.entity.MailCodeDO;
 import org.buaa.shortlink.dao.entity.UserDO;
 import org.buaa.shortlink.dao.mapper.MailCodeMapper;
 import org.buaa.shortlink.dao.mapper.UserMapper;
+import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
 import org.buaa.shortlink.service.UserService;
 import org.buaa.shortlink.toolkit.RandomGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -23,7 +27,13 @@ import java.util.Date;
 
 import static org.buaa.shortlink.common.consts.MailSendConstants.CODE_EXPIRE_TIME;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.MAIL_SEND_ERROR;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_ERROR;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_EXPIRED;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_NULL;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_EXIST;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_NULL;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
 
 /**
  * 用户接口实现层
@@ -37,7 +47,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Value("${spring.mail.username}")
     private String from;
-
 
     public UserRespDTO getUserByUsername(String username) {
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
@@ -81,6 +90,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
     }
 
+    @Override
+    public void register(UserRegisterReqDTO requestParam) {
+        String code = requestParam.getCode();
+        if (code == null) {
+            throw new ClientException(USER_CODE_NULL);
+        }
+        String cacheCode = mailCodeMapper.selectCodeByMail(requestParam.getMail());
+        if (!code.equals(cacheCode)) {
+            throw new ClientException(USER_CODE_ERROR);
+        }
+        if (mailCodeMapper.selectCodeIsExpired(requestParam.getMail())) {
+            throw new ClientException(USER_CODE_EXPIRED);
+        }
+        if (hasUsername(requestParam.getUsername())) {
+            throw new ClientException(USER_NAME_EXIST);
+        }
+        try {
+            int inserted = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
+            if (inserted < 1) {
+                throw new ClientException(USER_SAVE_ERROR);
+            }
+        } catch (DuplicateKeyException ex) {
+            throw new ClientException(USER_EXIST);
+        }
+    }
 
 
 
