@@ -203,3 +203,13 @@ CREATE TABLE `t_mail_code` (
        UNIQUE KEY `idx_unique_mail_code` (`mail`, `code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+DROP TABLE IF EXISTS `t_user_token`;
+CREATE TABLE `t_user_token` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `username` varchar(256) DEFAULT NULL COMMENT '用户名',
+    `token` varchar(512) NOT NULL COMMENT '登录token',
+    `create_time` datetime NOT NULL COMMENT '创建时间',
+    `expire_time` datetime NOT NULL COMMENT '过期时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_unique_user_token` (`username`, `token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

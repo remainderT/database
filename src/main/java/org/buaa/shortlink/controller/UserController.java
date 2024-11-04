@@ -3,7 +3,9 @@ package org.buaa.shortlink.controller;
 import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.common.convention.result.Result;
 import org.buaa.shortlink.common.convention.result.Results;
+import org.buaa.shortlink.dto.req.UserLoginReqDTO;
 import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
+import org.buaa.shortlink.dto.resp.UserLoginRespDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
 import org.buaa.shortlink.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,6 +57,12 @@ public class UserController {
         return Results.success();
     }
 
-
+    /**
+     * 用户登录
+     */
+    @PostMapping("/api/short-link/user/login")
+    public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO requestParam) {
+        return Results.success(userService.login(requestParam));
+    }
 
 }

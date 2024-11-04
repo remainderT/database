@@ -2,7 +2,9 @@ package org.buaa.shortlink.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.buaa.shortlink.dao.entity.UserDO;
+import org.buaa.shortlink.dto.req.UserLoginReqDTO;
 import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
+import org.buaa.shortlink.dto.resp.UserLoginRespDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
 
 /**
@@ -37,6 +39,15 @@ public interface UserService extends IService<UserDO> {
      * @param requestParam 注册用户请求参数
      */
     void register(UserRegisterReqDTO requestParam);
+
+    /**
+     * 用户登录
+     *
+     * @param requestParam 用户登录请求参数
+     * @return 用户登录返回参数 Token
+     */
+    UserLoginRespDTO login(UserLoginReqDTO requestParam);
+
 
 
 }

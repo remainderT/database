@@ -1,6 +1,7 @@
 package org.buaa.shortlink.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.UUID;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,9 +11,13 @@ import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.dao.entity.MailCodeDO;
 import org.buaa.shortlink.dao.entity.UserDO;
+import org.buaa.shortlink.dao.entity.UserTokenDO;
 import org.buaa.shortlink.dao.mapper.MailCodeMapper;
 import org.buaa.shortlink.dao.mapper.UserMapper;
+import org.buaa.shortlink.dao.mapper.UserTokenMapper;
+import org.buaa.shortlink.dto.req.UserLoginReqDTO;
 import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
+import org.buaa.shortlink.dto.resp.UserLoginRespDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
 import org.buaa.shortlink.service.UserService;
 import org.buaa.shortlink.toolkit.RandomGenerator;
@@ -24,8 +29,10 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Objects;
 
 import static org.buaa.shortlink.common.consts.MailSendConstants.CODE_EXPIRE_TIME;
+import static org.buaa.shortlink.common.consts.UserConstants.TOKEN_EXPIRE_TIME;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.MAIL_SEND_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_EXPIRED;
@@ -33,6 +40,8 @@ import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_NULL;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_EXIST;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_NULL;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_PASSWORD_ERROR;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_REPEATED_LOGIN;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
 
 /**
@@ -44,6 +53,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     private final JavaMailSender mailSender;
     private final MailCodeMapper mailCodeMapper;
+    private final UserTokenMapper userTokenMapper;
 
     @Value("${spring.mail.username}")
     private String from;
@@ -116,6 +126,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
     }
 
+    @Override
+    public UserLoginRespDTO login(UserLoginReqDTO requestParam) {
+        if (!hasUsername(requestParam.getUsername())) {
+            throw new ClientException(USER_NULL);
+        }
+        LambdaQueryWrapper<UserDO> userQueryWrapper = Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, requestParam.getUsername());
+        UserDO userDO = baseMapper.selectOne(userQueryWrapper);
+        if (!Objects.equals(userDO.getPassword(), requestParam.getPassword())) {
+            throw new ClientException(USER_PASSWORD_ERROR);
+        }
+        LambdaQueryWrapper<UserTokenDO> tokenQueryWrapper = Wrappers.lambdaQuery(UserTokenDO.class)
+                .eq(UserTokenDO::getUsername, requestParam.getUsername())
+                .gt(UserTokenDO::getExpireTime, new Date());
+        UserTokenDO tokenDO = userTokenMapper.selectOne(tokenQueryWrapper);
+        if (tokenDO != null) {
+            throw new ClientException(USER_REPEATED_LOGIN);
+        }
+        String uuid = UUID.randomUUID().toString();
+        UserTokenDO userTokenDO = UserTokenDO.builder()
+                .username(requestParam.getUsername())
+                .token(uuid)
+                .createTime(new Date())
+                .expireTime(new Date(System.currentTimeMillis() + TOKEN_EXPIRE_TIME))
+                .build();
+        userTokenMapper.insert(userTokenDO);
+        return new UserLoginRespDTO(uuid);
+    }
 
 
 }
