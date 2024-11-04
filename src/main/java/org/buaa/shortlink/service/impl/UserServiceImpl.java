@@ -88,16 +88,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         message.setSubject(MailSendConstants.SUBJECT);
         try {
             mailSender.send(message);
-            MailCodeDO mailCodeDO = new MailCodeDO();
-            mailCodeDO.setMail(mail);
-            mailCodeDO.setCode(code);
-            mailCodeDO.setCreateTime(new Date());
-            mailCodeDO.setExpireTime(new Date(System.currentTimeMillis() + CODE_EXPIRE_TIME));
-            mailCodeMapper.insert(mailCodeDO);
-            return true;
         } catch (Exception e) {
             throw new ServiceException(MAIL_SEND_ERROR);
         }
+        MailCodeDO mailCodeDO = MailCodeDO.builder()
+                .mail(mail)
+                .code(code)
+                .expireTime(new Date(System.currentTimeMillis() + CODE_EXPIRE_TIME))
+                .build();
+        mailCodeMapper.insert(mailCodeDO);
+        return true;
     }
 
     @Override
@@ -107,7 +107,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             throw new ClientException(USER_CODE_NULL);
         }
         String cacheCode = mailCodeMapper.selectCodeByMail(requestParam.getMail());
-        if (!code.equals(cacheCode)) {
+        if (!Objects.equals(code, cacheCode)) {
             throw new ClientException(USER_CODE_ERROR);
         }
         if (mailCodeMapper.selectCodeIsExpired(requestParam.getMail())) {
@@ -148,7 +148,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         UserTokenDO userTokenDO = UserTokenDO.builder()
                 .username(requestParam.getUsername())
                 .token(uuid)
-                .createTime(new Date())
                 .expireTime(new Date(System.currentTimeMillis() + TOKEN_EXPIRE_TIME))
                 .build();
         userTokenMapper.insert(userTokenDO);

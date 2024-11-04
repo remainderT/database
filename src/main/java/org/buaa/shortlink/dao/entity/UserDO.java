@@ -1,6 +1,7 @@
 package org.buaa.shortlink.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Builder;
 import org.buaa.shortlink.common.database.BaseDO;
 import lombok.Data;
 
@@ -8,6 +9,7 @@ import lombok.Data;
  * 用户持久层实体
  */
 @Data
+@Builder
 @TableName("t_user")
 public class UserDO extends BaseDO {
 

@@ -3,6 +3,7 @@ package org.buaa.shortlink.dao.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Builder;
 import lombok.Data;
+import org.buaa.shortlink.common.database.BaseDO;
 
 import java.util.Date;
 
@@ -12,7 +13,7 @@ import java.util.Date;
 @Data
 @Builder
 @TableName("t_user_token")
-public class UserTokenDO {
+public class UserTokenDO extends BaseDO {
 
     /**
     * id
@@ -28,11 +29,6 @@ public class UserTokenDO {
     * token
     */
     private String token;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
 
     /**
     * 过期时间
