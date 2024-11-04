@@ -154,5 +154,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return new UserLoginRespDTO(uuid);
     }
 
+    @Override
+    public Boolean checkLogin(String username, String token) {
+        LambdaQueryWrapper<UserTokenDO> tokenQueryWrapper = Wrappers.lambdaQuery(UserTokenDO.class)
+                .eq(UserTokenDO::getUsername, username)
+                .eq(UserTokenDO::getToken, token)
+                .gt(UserTokenDO::getExpireTime, new Date())
+                .eq(UserTokenDO::getDelFlag, 0);
+        UserTokenDO tokenDO = userTokenMapper.selectOne(tokenQueryWrapper);
+        if (tokenDO != null) {
+            return true;
+        }
+        return false;
+    }
+
+
 
 }
