@@ -1,5 +1,6 @@
 package org.buaa.shortlink.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -13,6 +14,7 @@ import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.dao.entity.GroupDO;
 import org.buaa.shortlink.dao.mapper.GroupMapper;
 import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
+import org.buaa.shortlink.dto.resp.ShortLinkGroupRespDTO;
 import org.buaa.shortlink.service.GroupService;
 import org.buaa.shortlink.toolkit.RandomGenerator;
 import org.springframework.stereotype.Service;
@@ -90,6 +92,16 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         GroupDO groupDO = new GroupDO();
         groupDO.setDelFlag(1);
         baseMapper.update(groupDO, updateWrapper);
+    }
+
+    @Override
+    public List<ShortLinkGroupRespDTO> listGroup() {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getDelFlag, 0)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
+        List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
+        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
     }
 
 }

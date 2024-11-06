@@ -3,6 +3,9 @@ package org.buaa.shortlink.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.buaa.shortlink.dao.entity.GroupDO;
 import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
+import org.buaa.shortlink.dto.resp.ShortLinkGroupRespDTO;
+
+import java.util.List;
 
 /**
  * 短链接分组接口层
@@ -37,5 +40,13 @@ public interface GroupService extends IService<GroupDO> {
      * @param gid 短链接分组标识
      */
     void deleteGroup(String gid);
+
+    /**
+     * 查询用户短链接分组集合
+     *
+     * @return 用户短链接分组集合
+     */
+    List<ShortLinkGroupRespDTO> listGroup();
+
 
 }
