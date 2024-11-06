@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.buaa.shortlink.common.biz.user.UserContext;
 import org.buaa.shortlink.common.consts.MailSendConstants;
 import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
@@ -18,6 +19,7 @@ import org.buaa.shortlink.dao.mapper.UserMapper;
 import org.buaa.shortlink.dao.mapper.UserTokenMapper;
 import org.buaa.shortlink.dto.req.UserLoginReqDTO;
 import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
+import org.buaa.shortlink.dto.req.UserUpdateReqDTO;
 import org.buaa.shortlink.dto.resp.UserLoginRespDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
 import org.buaa.shortlink.service.UserService;
@@ -45,6 +47,7 @@ import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_PASSWORD_ER
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_REPEATED_LOGIN;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_TOKEN_NULL;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_UPDATE_ERROR;
 
 /**
  * 用户接口实现层
@@ -188,6 +191,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return false;
     }
 
-
+    @Override
+    public void update(UserUpdateReqDTO requestParam) {
+        if (!Objects.equals(requestParam.getOldUsername(), UserContext.getUsername())) {
+            throw new ClientException(USER_UPDATE_ERROR);
+        }
+        if (!requestParam.getOldUsername().equals(requestParam.getNewUsername()) && hasUsername(requestParam.getNewUsername())) {
+            throw new ClientException(USER_NAME_EXIST);
+        }
+        UserDO userDO = UserDO.builder().
+                username(requestParam.getNewUsername()).
+                password(requestParam.getPassword()).
+                mail(requestParam.getMail()).
+                build();
+        LambdaUpdateWrapper<UserDO> updateWrapper = Wrappers.lambdaUpdate(UserDO.class)
+            .eq(UserDO::getUsername, requestParam.getOldUsername());
+        baseMapper.update(userDO, updateWrapper);
+        // 修改token表中的username
+        if (!Objects.equals(requestParam.getOldUsername(), requestParam.getNewUsername())) {
+            LambdaUpdateWrapper<UserTokenDO> tokenUpdateWrapper = Wrappers.lambdaUpdate(UserTokenDO.class)
+                    .eq(UserTokenDO::getUsername, requestParam.getOldUsername())
+                    .eq(UserTokenDO::getDelFlag, 0)
+                    .gt(UserTokenDO::getExpireTime, new Date());
+            UserTokenDO userTokenDO = UserTokenDO.builder()
+                    .username(requestParam.getNewUsername())
+                    .build();
+            userTokenMapper.update(userTokenDO, tokenUpdateWrapper);
+        }
+    }
 
 }

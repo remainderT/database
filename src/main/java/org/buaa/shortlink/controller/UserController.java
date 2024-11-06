@@ -5,6 +5,7 @@ import org.buaa.shortlink.common.convention.result.Result;
 import org.buaa.shortlink.common.convention.result.Results;
 import org.buaa.shortlink.dto.req.UserLoginReqDTO;
 import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
+import org.buaa.shortlink.dto.req.UserUpdateReqDTO;
 import org.buaa.shortlink.dto.resp.UserLoginRespDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
 import org.buaa.shortlink.service.UserService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -83,4 +85,12 @@ public class UserController {
         return Results.success(userService.checkLogin(username, token));
     }
 
+    /**
+     * 更新用户信息
+     */
+    @PutMapping("/api/short-link/user")
+    public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam) {
+        userService.update(requestParam);
+        return Results.success();
+    }
 }
