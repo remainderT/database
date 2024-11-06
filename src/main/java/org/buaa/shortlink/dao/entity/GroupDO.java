@@ -1,8 +1,10 @@
 package org.buaa.shortlink.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.buaa.shortlink.common.database.BaseDO;
 
 /**
@@ -11,6 +13,8 @@ import org.buaa.shortlink.common.database.BaseDO;
 @Data
 @TableName("t_group")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GroupDO extends BaseDO {
 
     /**

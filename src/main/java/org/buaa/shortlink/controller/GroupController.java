@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.common.convention.result.Result;
 import org.buaa.shortlink.common.convention.result.Results;
 import org.buaa.shortlink.dto.req.ShortLinkGroupSaveReqDTO;
+import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.buaa.shortlink.service.GroupService;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,4 +27,14 @@ public class GroupController {
         groupService.saveGroup(requestParam.getName());
         return Results.success();
     }
+
+    /**
+     * 修改短链接分组名称
+     */
+    @PutMapping("/api/short-link/group")
+    public Result<Void> updateGroup(@RequestBody ShortLinkGroupUpdateReqDTO requestParam) {
+        groupService.updateGroup(requestParam);
+        return Results.success();
+    }
+
 }

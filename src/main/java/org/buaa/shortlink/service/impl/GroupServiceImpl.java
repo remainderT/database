@@ -2,6 +2,7 @@ package org.buaa.shortlink.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.dao.entity.GroupDO;
 import org.buaa.shortlink.dao.mapper.GroupMapper;
+import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.buaa.shortlink.service.GroupService;
 import org.buaa.shortlink.toolkit.RandomGenerator;
 import org.springframework.stereotype.Service;
@@ -45,7 +47,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         }
         int retryCount = 0;
         int maxRetries = 10;
-        String gid = RandomGenerator.generateSixDigitCode();
+        String gid = RandomGenerator.generateSixGid();
         while (retryCount < maxRetries) {
             GroupDO groupDO = baseMapper.selectOne(Wrappers.lambdaQuery(GroupDO.class)
                     .eq(GroupDO::getGid, gid)
@@ -53,7 +55,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
             if (groupDO == null) {
                 break;
             }
-            gid = RandomGenerator.generateSixDigitCode();
+            gid = RandomGenerator.generateSixGid();
             retryCount++;
         }
         if (retryCount == maxRetries) {
@@ -66,6 +68,17 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .name(groupName)
                 .build();
         baseMapper.insert(groupDO);
-
     }
+
+    @Override
+    public void updateGroup(ShortLinkGroupUpdateReqDTO requestParam) {
+        LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getGid, requestParam.getGid())
+                .eq(GroupDO::getDelFlag, 0);
+        GroupDO groupDO = new GroupDO();
+        groupDO.setName(requestParam.getName());
+        baseMapper.update(groupDO, updateWrapper);
+    }
+
 }
