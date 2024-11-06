@@ -6,9 +6,11 @@ import org.buaa.shortlink.common.convention.result.Results;
 import org.buaa.shortlink.dto.req.ShortLinkGroupSaveReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.buaa.shortlink.service.GroupService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -36,5 +38,15 @@ public class GroupController {
         groupService.updateGroup(requestParam);
         return Results.success();
     }
+
+    /**
+     * 删除短链接分组
+     */
+    @DeleteMapping("/api/short-link/group")
+    public Result<Void> updateGroup(@RequestParam String gid) {
+        groupService.deleteGroup(gid);
+        return Results.success();
+    }
+
 
 }
