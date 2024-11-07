@@ -6,7 +6,9 @@ public enum ServiceErrorCodeEnum implements IErrorCode {
 
     MAIL_SEND_ERROR("B000101", "邮件发送错误"),
 
-    GROUP_GENERATE_ERROR("B000102", "短链接分组生成频繁");
+    GROUP_GENERATE_ERROR("B000102", "短链接分组生成频繁"),
+
+    SHORT_LINK_GENERATE_ERROR("B000103", "短链接生成频繁");
 
     private final String code;
 
