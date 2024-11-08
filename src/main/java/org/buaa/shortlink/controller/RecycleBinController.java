@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.common.convention.result.Result;
 import org.buaa.shortlink.common.convention.result.Results;
 import org.buaa.shortlink.dto.req.RecycleBinRecoverReqDTO;
+import org.buaa.shortlink.dto.req.RecycleBinRemoveReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinSaveReqDTO;
 import org.buaa.shortlink.service.RecycleBinService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,15 @@ public class RecycleBinController {
     @PostMapping("/api/short-link/recycle-bin/recover")
     public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam) {
         recycleBinService.recoverRecycleBin(requestParam);
+        return Results.success();
+    }
+
+    /**
+     * 移除短链接
+     */
+    @PostMapping("/api/short-link/recycle-bin/remove")
+    public Result<Void> removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO requestParam) {
+        recycleBinService.removeRecycleBin(requestParam);
         return Results.success();
     }
 

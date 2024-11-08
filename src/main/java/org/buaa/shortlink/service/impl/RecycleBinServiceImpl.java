@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
 import org.buaa.shortlink.dto.req.RecycleBinRecoverReqDTO;
+import org.buaa.shortlink.dto.req.RecycleBinRemoveReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinSaveReqDTO;
 import org.buaa.shortlink.service.RecycleBinService;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,20 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
                 .enableStatus(0)
                 .build();
         baseMapper.update(shortLinkDO, updateWrapper);
+    }
 
+    @Override
+    public void removeRecycleBin(RecycleBinRemoveReqDTO requestParam) {
+        LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getEnableStatus, 1)
+                .eq(ShortLinkDO::getDelTime, 0L)
+                .eq(ShortLinkDO::getDelFlag, 0);
+        ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
+                .delTime(System.currentTimeMillis())
+                .build();
+        delShortLinkDO.setDelFlag(1);
+        baseMapper.update(delShortLinkDO, updateWrapper);
     }
 }
