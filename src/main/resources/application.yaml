@@ -24,3 +24,7 @@ spring:
     from: 18967220636@163.com
     properties:
       mail.smtp.socketFactoryClass: javax.net.ssl.SSLSocketFactory
+
+short-link:
+  domain:
+    default: buaa.link:8000

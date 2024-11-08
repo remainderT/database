@@ -8,7 +8,9 @@ public enum ServiceErrorCodeEnum implements IErrorCode {
 
     GROUP_GENERATE_ERROR("B000102", "短链接分组生成频繁"),
 
-    SHORT_LINK_GENERATE_ERROR("B000103", "短链接生成频繁");
+    SHORT_LINK_GENERATE_ERROR("B000103", "短链接生成频繁"),
+
+    SHORT_LINK_GO_TO_ERROR("B000104", "短链接跳转错误");
 
     private final String code;
 

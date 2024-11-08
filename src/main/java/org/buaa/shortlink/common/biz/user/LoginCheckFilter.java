@@ -42,6 +42,7 @@ public class LoginCheckFilter implements Filter {
             String method = httpServletRequest.getMethod();
             if (!(Objects.equals(requestURI, "/api/short-link/user") && Objects.equals(method, "POST"))) {
                 if(UserContext.getUsername() == null){
+                    // filterChain.doFilter(servletRequest, servletResponse);   // 测试跳转功能
                     sendUnauthorizedResponse(httpServletResponse);
                     return;
                 }
@@ -58,7 +59,6 @@ public class LoginCheckFilter implements Filter {
         writer.flush();
         writer.close();
     }
-
 
 
 }
