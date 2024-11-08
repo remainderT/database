@@ -27,6 +27,7 @@ import org.buaa.shortlink.service.ShortLinkService;
 import org.buaa.shortlink.toolkit.HashGenerator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -59,6 +60,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         shortLinkDO.setShortUri(shortLinkSuffix);
         shortLinkDO.setDomain(createShortLinkDefaultDomain);
         shortLinkDO.setFullShortUrl(shortLinkDO.getDomain() + "/" + shortLinkSuffix);
+        shortLinkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
         baseMapper.insert(shortLinkDO);
         return ShortLinkCreateRespDTO.builder()
                 .fullShortUrl(shortLinkDO.getFullShortUrl())
@@ -162,6 +164,23 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             return document.title();
         }
         return "Error while fetching title.";
+    }
+
+    @SneakyThrows
+    private String getFavicon(String url) {
+        URL targetUrl = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) targetUrl.openConnection();
+        connection.setRequestMethod("GET");
+        connection.connect();
+        int responseCode = connection.getResponseCode();
+        if (HttpURLConnection.HTTP_OK == responseCode) {
+            Document document = Jsoup.connect(url).get();
+            Element faviconLink = document.select("link[rel~=(?i)^(shortcut )?icon]").first();
+            if (faviconLink != null) {
+                return faviconLink.attr("abs:href");
+            }
+        }
+        return null;
     }
 
 }
