@@ -31,7 +31,9 @@ public enum UserErrorCodeEnum implements IErrorCode {
 
     USER_UPDATE_ERROR("A000302", "用户信息更新失败"),
 
-    GROUP_SIZE_LIMIT("A000401", "分组数量超过限制");
+    GROUP_SIZE_LIMIT("A000401", "分组数量超过限制"),
+
+    SHORT_LINK_NULL("A000402", "短链接不存在");
 
 
     private final String code;
