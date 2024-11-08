@@ -136,12 +136,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .eq(ShortLinkDO::getDelFlag, 0)
                 .eq(ShortLinkDO::getEnableStatus, 0);
         ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
-        if (shortLinkDO == null) {
-            throw new ClientException(SHORT_LINK_NULL);
-        }
-        String originalLink = shortLinkDO.getOriginUrl();
+        String objectUrl = shortLinkDO == null ? "/page/notfound" : shortLinkDO.getOriginUrl();
         try {
-            ((HttpServletResponse) response).sendRedirect(originalLink);
+            ((HttpServletResponse) response).sendRedirect(objectUrl);
         } catch (IOException e) {
             throw new ServiceException(SHORT_LINK_GO_TO_ERROR);
         }

@@ -25,6 +25,11 @@ spring:
     properties:
       mail.smtp.socketFactoryClass: javax.net.ssl.SSLSocketFactory
 
+  mvc:
+    view:
+      prefix: /templates/
+      suffix: .html
+
 short-link:
   domain:
     default: buaa.link:8000
