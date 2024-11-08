@@ -2,6 +2,7 @@ package org.buaa.shortlink.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
+import org.buaa.shortlink.dto.req.RecycleBinRecoverReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinSaveReqDTO;
 
 /**
@@ -15,5 +16,14 @@ public interface RecycleBinService extends IService<ShortLinkDO> {
      * @param requestParam 请求参数
      */
     void saveRecycleBin(RecycleBinSaveReqDTO requestParam);
+
+
+    /**
+     * 从回收站恢复短链接
+     *
+     * @param requestParam 恢复短链接请求参数
+     */
+    void recoverRecycleBin(RecycleBinRecoverReqDTO requestParam);
+
 
 }

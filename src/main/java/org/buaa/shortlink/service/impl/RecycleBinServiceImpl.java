@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
+import org.buaa.shortlink.dto.req.RecycleBinRecoverReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinSaveReqDTO;
 import org.buaa.shortlink.service.RecycleBinService;
 import org.springframework.stereotype.Service;
@@ -27,5 +28,19 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
                 .enableStatus(1)
                 .build();
         baseMapper.update(shortLinkDO, updateWrapper);
+    }
+
+    @Override
+    public void recoverRecycleBin(RecycleBinRecoverReqDTO requestParam) {
+        LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getEnableStatus, 1)
+                .eq(ShortLinkDO::getDelFlag, 0);
+        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .enableStatus(0)
+                .build();
+        baseMapper.update(shortLinkDO, updateWrapper);
+
     }
 }
