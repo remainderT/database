@@ -22,6 +22,7 @@ import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
 import org.buaa.shortlink.dto.req.UserUpdateReqDTO;
 import org.buaa.shortlink.dto.resp.UserLoginRespDTO;
 import org.buaa.shortlink.dto.resp.UserRespDTO;
+import org.buaa.shortlink.service.GroupService;
 import org.buaa.shortlink.service.UserService;
 import org.buaa.shortlink.toolkit.RandomGenerator;
 import org.springframework.beans.BeanUtils;
@@ -35,6 +36,7 @@ import java.util.Date;
 import java.util.Objects;
 
 import static org.buaa.shortlink.common.consts.MailSendConstants.CODE_EXPIRE_TIME;
+import static org.buaa.shortlink.common.consts.UserConstants.DEFAULT_GROUP_NAME;
 import static org.buaa.shortlink.common.consts.UserConstants.TOKEN_EXPIRE_TIME;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.MAIL_SEND_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_ERROR;
@@ -59,6 +61,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private final JavaMailSender mailSender;
     private final MailCodeMapper mailCodeMapper;
     private final UserTokenMapper userTokenMapper;
+    private final GroupService groupService;
+
 
     @Value("${spring.mail.username}")
     private String from;
@@ -126,6 +130,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             if (inserted < 1) {
                 throw new ClientException(USER_SAVE_ERROR);
             }
+            groupService.saveGroup(DEFAULT_GROUP_NAME);
         } catch (DuplicateKeyException ex) {
             throw new ClientException(USER_EXIST);
         }
