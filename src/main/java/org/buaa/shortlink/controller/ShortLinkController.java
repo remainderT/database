@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -58,6 +59,14 @@ public class ShortLinkController {
     @GetMapping("/{short-uri}")
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
         shortLinkService.restoreUrl(shortUri, request, response);
+    }
+
+    /**
+     * 根据 URL 获取对应网站的标题
+     */
+    @GetMapping("/api/short-link/title")
+    public Result<String> getTitleByUrl(@RequestParam("url") String url) {
+        return Results.success(shortLinkService.getTitleByUrl(url));
     }
 
 }
