@@ -38,11 +38,10 @@ public class LoginCheckFilter implements Filter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
         String requestURI = httpServletRequest.getRequestURI();
-        if (!IGNORE_URI.contains(requestURI)) {
+        if (!IGNORE_URI.contains(requestURI) && !(requestURI.length() == 7)) {
             String method = httpServletRequest.getMethod();
             if (!(Objects.equals(requestURI, "/api/short-link/user") && Objects.equals(method, "POST"))) {
                 if(UserContext.getUsername() == null){
-                    // filterChain.doFilter(servletRequest, servletResponse);   // 测试跳转功能
                     sendUnauthorizedResponse(httpServletResponse);
                     return;
                 }
