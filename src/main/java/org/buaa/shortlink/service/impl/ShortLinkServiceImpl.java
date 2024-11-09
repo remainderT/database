@@ -26,11 +26,13 @@ import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
 import org.buaa.shortlink.dao.entity.LinkLocaleStatsDO;
+import org.buaa.shortlink.dao.entity.LinkOsStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUipStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkLocaleStatsMapper;
+import org.buaa.shortlink.dao.mapper.LinkOsStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkUipStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.LinkUvStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
@@ -57,11 +59,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.buaa.shortlink.common.consts.ShortLinkConstants.AMAP_REMOTE_URL;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_EXPIRED;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GENERATE_ERROR;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_STATS_RECORD_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.SHORT_LINK_NULL;
-import static org.buaa.shortlink.common.consts.ShortLinkConstants.AMAP_REMOTE_URL;
 
 /**
  * 短链接接口实现层
@@ -79,6 +81,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkUvStatsDOMapper linkUvStatsDOMapper;
     private final LinkUipStatsDOMapper linkUipStatsDOMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -252,6 +255,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .date(new Date())
                         .build();
                 linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+            // 获取操作系统信息
+                LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                        .os(LinkUtil.getOs(((HttpServletRequest) request)))
+                        .cnt(1)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
 
             }
         } catch (Throwable ex) {
