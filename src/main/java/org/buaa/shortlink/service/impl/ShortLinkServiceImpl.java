@@ -5,6 +5,9 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -22,10 +25,12 @@ import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
+import org.buaa.shortlink.dao.entity.LinkLocaleStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUipStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
+import org.buaa.shortlink.dao.mapper.LinkLocaleStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkUipStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.LinkUvStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
@@ -46,6 +51,8 @@ import org.springframework.stereotype.Service;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,6 +61,7 @@ import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_EX
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GENERATE_ERROR;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_STATS_RECORD_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.SHORT_LINK_NULL;
+import static org.buaa.shortlink.common.consts.ShortLinkConstants.AMAP_REMOTE_URL;
 
 /**
  * 短链接接口实现层
@@ -65,9 +73,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Value("${short-link.domain.default}")
     private String createShortLinkDefaultDomain;
+    @Value("${short-link.stats.locale.amap-key}")
+    private String statsLocaleAmapKey;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkUvStatsDOMapper linkUvStatsDOMapper;
     private final LinkUipStatsDOMapper linkUipStatsDOMapper;
+    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -207,6 +218,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             boolean isNewUv = checkNewUv(fullShortUrl, request, response);
             boolean isNewUip = checkNewUip(fullShortUrl, request);
+            String ip = LinkUtil.getActualIp(((HttpServletRequest) request));
             int hour = DateUtil.hour(new Date(), true);
             Week week = DateUtil.dayOfWeekEnum(new Date());
             int weekValue = week.getIso8601Value();
@@ -220,6 +232,28 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+            // 获取地理位置信息
+            Map<String, Object> localeParamMap = new HashMap<>();
+            localeParamMap.put("key", statsLocaleAmapKey);
+            localeParamMap.put("ip", ip);
+            String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
+            JSONObject localeResultObj = JSON.parseObject(localeResultStr);
+            String infoCode = localeResultObj.getString("infocode");
+            if (StrUtil.isNotBlank(infoCode) && StrUtil.equals(infoCode, "10000")) {
+                String province = localeResultObj.getString("province");
+                boolean unknownFlag = StrUtil.equals(province, "[]");
+                LinkLocaleStatsDO linkLocaleStatsDO = LinkLocaleStatsDO.builder()
+                        .province(unknownFlag ? "未知" : province)
+                        .city(unknownFlag ? "未知" : localeResultObj.getString("city"))
+                        .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
+                        .cnt(1)
+                        .fullShortUrl(fullShortUrl)
+                        .country("中国")
+                        .date(new Date())
+                        .build();
+                linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+
+            }
         } catch (Throwable ex) {
             throw new ServiceException(SHORT_LINK_STATS_RECORD_ERROR);
         }
@@ -273,5 +307,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         return false;
     }
+
+
 
 }

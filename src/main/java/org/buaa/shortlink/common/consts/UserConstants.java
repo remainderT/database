@@ -2,7 +2,6 @@ package org.buaa.shortlink.common.consts;
 
 public class UserConstants {
 
-
     /**
      * 用户登录token过期时间
      */

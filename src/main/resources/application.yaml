@@ -33,3 +33,6 @@ spring:
 short-link:
   domain:
     default: buaa.link:8000
+  stats:
+    locale:
+      amap-key: 49c977bb4eae8868b2a2e6ccc851d507
