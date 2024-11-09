@@ -4,6 +4,7 @@ package org.buaa.shortlink.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -11,6 +12,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,8 +22,10 @@ import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
+import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
+import org.buaa.shortlink.dao.mapper.LinkUvStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
 import org.buaa.shortlink.dto.req.ShortLinkCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkPageReqDTO;
@@ -44,6 +49,7 @@ import java.util.UUID;
 
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_EXPIRED;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GENERATE_ERROR;
+import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_STATS_RECORD_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.SHORT_LINK_NULL;
 
 /**
@@ -57,6 +63,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Value("${short-link.domain.default}")
     private String createShortLinkDefaultDomain;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final LinkUvStatsDOMapper linkUvStatsDOMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -194,12 +201,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     private void shortLinkStats(String fullShortUrl, ServletRequest request, ServletResponse response) {
         try {
+            boolean isNewUv = checkNewUv(fullShortUrl, request, response);
             int hour = DateUtil.hour(new Date(), true);
             Week week = DateUtil.dayOfWeekEnum(new Date());
             int weekValue = week.getIso8601Value();
             LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
                     .pv(1)
-                    .uv(1)
+                    .uv(isNewUv ? 1 : 0)
                     .uip(1)
                     .hour(hour)
                     .weekday(weekValue)
@@ -208,8 +216,40 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
         } catch (Throwable ex) {
-            log.error("短链接访问量统计异常", ex);
+            throw new ServiceException(SHORT_LINK_STATS_RECORD_ERROR);
         }
+    }
+
+    public boolean checkNewUv(String fullShortUrl, ServletRequest request, ServletResponse response) {
+        Cookie[] cookies = ((HttpServletRequest) request).getCookies();
+        String uvCookieValue = null;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("uv".equals(cookie.getName())) {
+                    uvCookieValue = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        boolean isNewUv = true;
+        if (uvCookieValue != null) {
+            LambdaQueryWrapper<LinkUvStatsDO> queryWrapper = Wrappers.lambdaQuery(LinkUvStatsDO.class)
+                    .eq(LinkUvStatsDO::getUuid, uvCookieValue);
+            isNewUv = linkUvStatsDOMapper.selectOne(queryWrapper) == null;
+        }
+        if (isNewUv) {
+            String uuid = UUID.randomUUID().toString();
+            LinkUvStatsDO newUvStats = LinkUvStatsDO.builder()
+                    .uuid(uuid)
+                    .fullShortUrl(fullShortUrl)
+                    .build();
+            linkUvStatsDOMapper.insert(newUvStats);
+            Cookie uvCookie = new Cookie("uv", uuid);
+            uvCookie.setMaxAge(60 * 60 * 24 * 30);
+            uvCookie.setPath(StrUtil.sub(fullShortUrl, fullShortUrl.indexOf("/"), fullShortUrl.length()));
+            ((HttpServletResponse) response).addCookie(uvCookie);
+        }
+        return isNewUv;
     }
 
 }
