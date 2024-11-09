@@ -2,6 +2,8 @@ package org.buaa.shortlink.service.impl;
 
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.Week;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -16,7 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
+import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
+import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
 import org.buaa.shortlink.dto.req.ShortLinkCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkPageReqDTO;
@@ -31,7 +35,6 @@ import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Date;
@@ -41,7 +44,6 @@ import java.util.UUID;
 
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_EXPIRED;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GENERATE_ERROR;
-import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GO_TO_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.SHORT_LINK_NULL;
 
 /**
@@ -54,6 +56,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Value("${short-link.domain.default}")
     private String createShortLinkDefaultDomain;
+    private final LinkAccessStatsMapper linkAccessStatsMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -131,6 +134,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
     }
 
+    @SneakyThrows
     @Override
     public void restoreUrl(String shortUri, ServletRequest request, ServletResponse response) {
         String serverName = request.getServerName();
@@ -149,12 +153,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             if (shortLinkDO.getValidDateType() == 1 && shortLinkDO.getValidDate().before(new Date())) {
                 throw new ServiceException(SHORT_LINK_EXPIRED);
             }
-        }
-        String objectUrl = shortLinkDO == null ? "/page/notfound" : shortLinkDO.getOriginUrl();
-        try {
-            ((HttpServletResponse) response).sendRedirect(objectUrl);
-        } catch (IOException e) {
-            throw new ServiceException(SHORT_LINK_GO_TO_ERROR);
+            shortLinkStats(fullShortUrl, request, response);
+            ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
+        } else {
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
         }
     }
 
@@ -188,6 +190,26 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
         }
         return null;
+    }
+
+    private void shortLinkStats(String fullShortUrl, ServletRequest request, ServletResponse response) {
+        try {
+            int hour = DateUtil.hour(new Date(), true);
+            Week week = DateUtil.dayOfWeekEnum(new Date());
+            int weekValue = week.getIso8601Value();
+            LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
+                    .pv(1)
+                    .uv(1)
+                    .uip(1)
+                    .hour(hour)
+                    .weekday(weekValue)
+                    .fullShortUrl(fullShortUrl)
+                    .date(new Date())
+                    .build();
+            linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+        } catch (Throwable ex) {
+            log.error("短链接访问量统计异常", ex);
+        }
     }
 
 }
