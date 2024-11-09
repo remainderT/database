@@ -22,9 +22,11 @@ import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
+import org.buaa.shortlink.dao.entity.LinkUipStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
+import org.buaa.shortlink.dao.mapper.LinkUipStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.LinkUvStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
 import org.buaa.shortlink.dto.req.ShortLinkCreateReqDTO;
@@ -34,6 +36,7 @@ import org.buaa.shortlink.dto.resp.ShortLinkCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkPageRespDTO;
 import org.buaa.shortlink.service.ShortLinkService;
 import org.buaa.shortlink.toolkit.HashGenerator;
+import org.buaa.shortlink.toolkit.LinkUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -64,6 +67,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private String createShortLinkDefaultDomain;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkUvStatsDOMapper linkUvStatsDOMapper;
+    private final LinkUipStatsDOMapper linkUipStatsDOMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -202,13 +206,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private void shortLinkStats(String fullShortUrl, ServletRequest request, ServletResponse response) {
         try {
             boolean isNewUv = checkNewUv(fullShortUrl, request, response);
+            boolean isNewUip = checkNewUip(fullShortUrl, request);
             int hour = DateUtil.hour(new Date(), true);
             Week week = DateUtil.dayOfWeekEnum(new Date());
             int weekValue = week.getIso8601Value();
             LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
                     .pv(1)
                     .uv(isNewUv ? 1 : 0)
-                    .uip(1)
+                    .uip(isNewUip ? 1 : 0)
                     .hour(hour)
                     .weekday(weekValue)
                     .fullShortUrl(fullShortUrl)
@@ -250,6 +255,23 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ((HttpServletResponse) response).addCookie(uvCookie);
         }
         return isNewUv;
+    }
+
+    public boolean checkNewUip(String fullShortUrl, ServletRequest request) {
+        String ip = LinkUtil.getActualIp(((HttpServletRequest) request));
+        LambdaQueryWrapper<LinkUipStatsDO> queryWrapper = Wrappers.lambdaQuery(LinkUipStatsDO.class)
+                .eq(LinkUipStatsDO::getIp, ip)
+                .eq(LinkUipStatsDO::getFullShortUrl, fullShortUrl);
+        LinkUipStatsDO linkUipStatsDO = linkUipStatsDOMapper.selectOne(queryWrapper);
+        if (linkUipStatsDO == null) {
+            linkUipStatsDO = LinkUipStatsDO.builder()
+                    .ip(ip)
+                    .fullShortUrl(fullShortUrl)
+                    .build();
+            linkUipStatsDOMapper.insert(linkUipStatsDO);
+            return true;
+        }
+        return false;
     }
 
 }

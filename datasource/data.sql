@@ -227,3 +227,14 @@ CREATE TABLE `t_link_uv_stats` (
     `del_flag`       tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_link_uip_stats`;
+CREATE TABLE `t_link_uip_stats` (
+   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+   `full_short_url` varchar(128) DEFAULT NULL COMMENT '完整短链接',
+   `ip` varchar(64) NOT NULL COMMENT 'ip地址',
+   `create_time`    datetime     DEFAULT NULL COMMENT '创建时间',
+   `update_time`    datetime     DEFAULT NULL COMMENT '修改时间',
+   `del_flag`       tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
