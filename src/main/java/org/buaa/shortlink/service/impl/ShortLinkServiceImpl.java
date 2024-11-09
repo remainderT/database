@@ -34,10 +34,12 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_EXPIRED;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GENERATE_ERROR;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GO_TO_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.SHORT_LINK_NULL;
@@ -143,6 +145,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .eq(ShortLinkDO::getDelFlag, 0)
                 .eq(ShortLinkDO::getEnableStatus, 0);
         ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
+        if (shortLinkDO != null) {
+            if (shortLinkDO.getValidDateType() == 1 && shortLinkDO.getValidDate().before(new Date())) {
+                throw new ServiceException(SHORT_LINK_EXPIRED);
+            }
+        }
         String objectUrl = shortLinkDO == null ? "/page/notfound" : shortLinkDO.getOriginUrl();
         try {
             ((HttpServletResponse) response).sendRedirect(objectUrl);

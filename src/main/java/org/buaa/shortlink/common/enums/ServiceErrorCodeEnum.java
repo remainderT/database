@@ -10,7 +10,9 @@ public enum ServiceErrorCodeEnum implements IErrorCode {
 
     SHORT_LINK_GENERATE_ERROR("B000103", "短链接生成频繁"),
 
-    SHORT_LINK_GO_TO_ERROR("B000104", "短链接跳转错误");
+    SHORT_LINK_GO_TO_ERROR("B000104", "短链接跳转错误"),
+
+    SHORT_LINK_EXPIRED("B000105", "短链接已过期");
 
     private final String code;
 
