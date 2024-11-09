@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
+import org.buaa.shortlink.dto.req.ShortLinkBatchCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkPageReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkUpdateReqDTO;
+import org.buaa.shortlink.dto.resp.ShortLinkBatchCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkPageRespDTO;
 
@@ -23,6 +25,14 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * @return 短链接创建信息
      */
     ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam);
+
+    /**
+     * 批量创建短链接
+     *
+     * @param requestParam 批量创建短链接请求参数
+     * @return 批量创建短链接返回参数
+     */
+    ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam);
 
     /**
      * 分页查询短链接

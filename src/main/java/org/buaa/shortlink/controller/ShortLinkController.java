@@ -6,9 +6,11 @@ import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.common.convention.result.Result;
 import org.buaa.shortlink.common.convention.result.Results;
+import org.buaa.shortlink.dto.req.ShortLinkBatchCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkPageReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkUpdateReqDTO;
+import org.buaa.shortlink.dto.resp.ShortLinkBatchCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkPageRespDTO;
 import org.buaa.shortlink.service.ShortLinkService;
@@ -69,4 +71,11 @@ public class ShortLinkController {
         return Results.success(shortLinkService.getTitleByUrl(url));
     }
 
+    /**
+     * 批量创建短链接
+     */
+    @PostMapping("/api/short-link/create/batch")
+    public Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam) {
+        return Results.success(shortLinkService.batchCreateShortLink(requestParam));
+    }
 }
