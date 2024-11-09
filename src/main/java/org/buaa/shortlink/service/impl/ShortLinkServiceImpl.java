@@ -28,6 +28,7 @@ import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
 import org.buaa.shortlink.dao.entity.LinkBrowserStatsDO;
 import org.buaa.shortlink.dao.entity.LinkDeviceStatsDO;
 import org.buaa.shortlink.dao.entity.LinkLocaleStatsDO;
+import org.buaa.shortlink.dao.entity.LinkNetworkStatsDO;
 import org.buaa.shortlink.dao.entity.LinkOsStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUipStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
@@ -36,6 +37,7 @@ import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkBrowserStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkDeviceStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkLocaleStatsMapper;
+import org.buaa.shortlink.dao.mapper.LinkNetworkStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkOsStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkUipStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.LinkUvStatsDOMapper;
@@ -88,6 +90,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
+    private final LinkNetworkStatsMapper linkNetworkStatsMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -285,6 +288,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .date(new Date())
                         .build();
                 linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+            // 获取网络信息
+                LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                        .network(LinkUtil.getNetwork(((HttpServletRequest) request)))
+                        .cnt(1)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
             }
         } catch (Throwable ex) {
             throw new ServiceException(SHORT_LINK_STATS_RECORD_ERROR);
