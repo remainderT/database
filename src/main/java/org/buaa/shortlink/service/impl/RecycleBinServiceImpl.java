@@ -1,7 +1,11 @@
 package org.buaa.shortlink.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
@@ -9,6 +13,7 @@ import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
 import org.buaa.shortlink.dto.req.RecycleBinRecoverReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinRemoveReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinSaveReqDTO;
+import org.buaa.shortlink.dto.resp.ShortLinkPageRespDTO;
 import org.buaa.shortlink.service.RecycleBinService;
 import org.springframework.stereotype.Service;
 
@@ -57,5 +62,14 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
                 .build();
         delShortLinkDO.setDelFlag(1);
         baseMapper.update(delShortLinkDO, updateWrapper);
+    }
+
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink() {
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getEnableStatus, 1);
+        IPage<ShortLinkDO> page = baseMapper.selectPage(new Page<>(), queryWrapper);
+        return page.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 }

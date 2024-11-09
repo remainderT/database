@@ -1,10 +1,12 @@
 package org.buaa.shortlink.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dto.req.RecycleBinRecoverReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinRemoveReqDTO;
 import org.buaa.shortlink.dto.req.RecycleBinSaveReqDTO;
+import org.buaa.shortlink.dto.resp.ShortLinkPageRespDTO;
 
 /**
  * 回收站管理接口层
@@ -32,5 +34,12 @@ public interface RecycleBinService extends IService<ShortLinkDO> {
      * @param requestParam 移除短链接请求参数
      */
     void removeRecycleBin(RecycleBinRemoveReqDTO requestParam);
+
+    /**
+     * 分页查询短链接
+     *
+     * @return 短链接分页返回结果
+     */
+    IPage<ShortLinkPageRespDTO> pageShortLink();
 
 }
