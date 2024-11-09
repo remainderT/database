@@ -25,12 +25,14 @@ import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
+import org.buaa.shortlink.dao.entity.LinkBrowserStatsDO;
 import org.buaa.shortlink.dao.entity.LinkLocaleStatsDO;
 import org.buaa.shortlink.dao.entity.LinkOsStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUipStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
 import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
+import org.buaa.shortlink.dao.mapper.LinkBrowserStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkLocaleStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkOsStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkUipStatsDOMapper;
@@ -82,6 +84,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkUipStatsDOMapper linkUipStatsDOMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
+    private final LinkBrowserStatsMapper linkBrowserStatsMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -263,7 +266,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .date(new Date())
                         .build();
                 linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
-
+            // 获取浏览器信息
+                LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
+                        .browser(LinkUtil.getBrowser(((HttpServletRequest) request)))
+                        .cnt(1)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
             }
         } catch (Throwable ex) {
             throw new ServiceException(SHORT_LINK_STATS_RECORD_ERROR);
@@ -318,7 +328,5 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         return false;
     }
-
-
 
 }
