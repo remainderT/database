@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.common.convention.result.Result;
 import org.buaa.shortlink.common.convention.result.Results;
 import org.buaa.shortlink.dto.req.ShortLinkGroupSaveReqDTO;
+import org.buaa.shortlink.dto.req.ShortLinkGroupSortReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkGroupRespDTO;
 import org.buaa.shortlink.service.GroupService;
@@ -58,6 +59,15 @@ public class GroupController {
     @GetMapping("/api/short-link/group")
     public Result<List<ShortLinkGroupRespDTO>> listGroup() {
         return Results.success(groupService.listGroup());
+    }
+
+    /**
+     * 排序短链接分组
+     */
+    @PostMapping("/api/short-link/group/sort")
+    public Result<Void> sortGroup(@RequestBody List<ShortLinkGroupSortReqDTO> requestParam) {
+        groupService.sortGroup(requestParam);
+        return Results.success();
     }
 
 

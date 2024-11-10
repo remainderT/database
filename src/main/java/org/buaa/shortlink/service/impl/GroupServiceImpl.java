@@ -13,6 +13,7 @@ import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.dao.entity.GroupDO;
 import org.buaa.shortlink.dao.mapper.GroupMapper;
+import org.buaa.shortlink.dto.req.ShortLinkGroupSortReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkGroupRespDTO;
 import org.buaa.shortlink.service.GroupService;
@@ -99,9 +100,23 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getDelFlag, 0)
                 .eq(GroupDO::getUsername, UserContext.getUsername())
-                .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
+                .orderByAsc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
         return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+    }
+
+    @Override
+    public void sortGroup(List<ShortLinkGroupSortReqDTO> requestParam) {
+        requestParam.forEach(each -> {
+            GroupDO groupDO = GroupDO.builder()
+                    .sortOrder(each.getSortOrder())
+                    .build();
+            LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                    .eq(GroupDO::getUsername, UserContext.getUsername())
+                    .eq(GroupDO::getGid, each.getGid())
+                    .eq(GroupDO::getDelFlag, 0);
+            baseMapper.update(groupDO, updateWrapper);
+        });
     }
 
 }

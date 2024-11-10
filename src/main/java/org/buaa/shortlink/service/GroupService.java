@@ -2,6 +2,7 @@ package org.buaa.shortlink.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.buaa.shortlink.dao.entity.GroupDO;
+import org.buaa.shortlink.dto.req.ShortLinkGroupSortReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkGroupRespDTO;
 
@@ -47,6 +48,13 @@ public interface GroupService extends IService<GroupDO> {
      * @return 用户短链接分组集合
      */
     List<ShortLinkGroupRespDTO> listGroup();
+
+    /**
+     * 短链接分组排序
+     *
+     * @param requestParam 短链接分组排序参数
+     */
+    void sortGroup(List<ShortLinkGroupSortReqDTO> requestParam);
 
 
 }
