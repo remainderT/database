@@ -1,5 +1,6 @@
 package org.buaa.shortlink.dao.entity;
 
+
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,17 +8,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.buaa.shortlink.common.database.BaseDO;
 
-import java.util.Date;
-
 /**
- * 短链接基础访问监控实体
+ * 访问日志监控实体
  */
 @Data
+@TableName("t_link_access_logs")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("t_link_access_stats")
-public class LinkAccessStatsDO extends BaseDO {
+public class LinkAccessLogsDO extends BaseDO {
 
     /**
      * id
@@ -30,32 +29,37 @@ public class LinkAccessStatsDO extends BaseDO {
     private String fullShortUrl;
 
     /**
-     * 日期
+     * 用户信息
      */
-    private Date date;
+    private String user;
 
     /**
-     * 访问量
+     * 浏览器
      */
-    private Integer pv;
+    private String browser;
 
     /**
-     * 独立访客数
+     * 操作系统
      */
-    private Integer uv;
+    private String os;
 
     /**
-     * 独立ip数
+     * ip
      */
-    private Integer uip;
+    private String ip;
 
     /**
-     * 小时
+     * 访问网络
      */
-    private Integer hour;
+    private String network;
 
     /**
-     * 星期
+     * 访问设备
      */
-    private Integer weekday;
+    private String device;
+
+    /**
+     * 地区
+     */
+    private String locale;
 }

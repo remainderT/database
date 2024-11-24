@@ -21,24 +21,29 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.buaa.shortlink.common.biz.user.UserContext;
 import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
+import org.buaa.shortlink.dao.entity.LinkAccessLogsDO;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
 import org.buaa.shortlink.dao.entity.LinkBrowserStatsDO;
 import org.buaa.shortlink.dao.entity.LinkDeviceStatsDO;
 import org.buaa.shortlink.dao.entity.LinkLocaleStatsDO;
 import org.buaa.shortlink.dao.entity.LinkNetworkStatsDO;
 import org.buaa.shortlink.dao.entity.LinkOsStatsDO;
+import org.buaa.shortlink.dao.entity.LinkStatsTodayDO;
 import org.buaa.shortlink.dao.entity.LinkUipStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
+import org.buaa.shortlink.dao.mapper.LinkAccessLogsMapper;
 import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkBrowserStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkDeviceStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkLocaleStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkNetworkStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkOsStatsMapper;
+import org.buaa.shortlink.dao.mapper.LinkStatsTodayMapper;
 import org.buaa.shortlink.dao.mapper.LinkUipStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.LinkUvStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
@@ -72,7 +77,6 @@ import java.util.UUID;
 import static org.buaa.shortlink.common.consts.ShortLinkConstants.AMAP_REMOTE_URL;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_EXPIRED;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GENERATE_ERROR;
-import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_STATS_RECORD_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.SHORT_LINK_NULL;
 
 /**
@@ -87,6 +91,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private String createShortLinkDefaultDomain;
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
+    private final ShortLinkMapper shortLinkMapper;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkUvStatsDOMapper linkUvStatsDOMapper;
     private final LinkUipStatsDOMapper linkUipStatsDOMapper;
@@ -95,6 +100,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
+    private final LinkAccessLogsMapper linkAccessLogsMapper;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -171,7 +178,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         ShortLinkDO shortLinkDO = ShortLinkDO.builder()
                 .domain(hasShortLinkDO.getDomain())
                 .shortUri(hasShortLinkDO.getShortUri())
-                // .favicon(Objects.equals(requestParam.getOriginUrl(), hasShortLinkDO.getOriginUrl()) ? hasShortLinkDO.getFavicon() : getFavicon(requestParam.getOriginUrl()))
+                .favicon(Objects.equals(requestParam.getOriginUrl(), hasShortLinkDO.getOriginUrl()) ? hasShortLinkDO.getFavicon() : getFavicon(requestParam.getOriginUrl()))
                 .createdType(hasShortLinkDO.getCreatedType())
                 .gid(requestParam.getGid())
                 .originUrl(requestParam.getOriginUrl())
@@ -259,14 +266,21 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         return null;
     }
 
+    @SneakyThrows
     private void shortLinkStats(String fullShortUrl, ServletRequest request, ServletResponse response) {
         try {
+            String remoteAddr = LinkUtil.getActualIp(((HttpServletRequest) request));
+            String os = LinkUtil.getOs(((HttpServletRequest) request));
+            String browser = LinkUtil.getBrowser(((HttpServletRequest) request));
+            String device = LinkUtil.getDevice(((HttpServletRequest) request));
+            String network = LinkUtil.getNetwork(((HttpServletRequest) request));
             boolean isNewUv = checkNewUv(fullShortUrl, request, response);
             boolean isNewUip = checkNewUip(fullShortUrl, request);
-            String ip = LinkUtil.getActualIp(((HttpServletRequest) request));
             int hour = DateUtil.hour(new Date(), true);
             Week week = DateUtil.dayOfWeekEnum(new Date());
             int weekValue = week.getIso8601Value();
+            Date currentDate = new Date();
+
             LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
                     .pv(1)
                     .uv(isNewUv ? 1 : 0)
@@ -274,64 +288,91 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .hour(hour)
                     .weekday(weekValue)
                     .fullShortUrl(fullShortUrl)
-                    .date(new Date())
+                    .date(currentDate)
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
-            // 获取地理位置信息
+
             Map<String, Object> localeParamMap = new HashMap<>();
             localeParamMap.put("key", statsLocaleAmapKey);
-            localeParamMap.put("ip", ip);
+            localeParamMap.put("ip", remoteAddr);
             String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
             JSONObject localeResultObj = JSON.parseObject(localeResultStr);
             String infoCode = localeResultObj.getString("infocode");
+
+            String actualProvince = "未知";
+            String actualCity = "未知";
             if (StrUtil.isNotBlank(infoCode) && StrUtil.equals(infoCode, "10000")) {
                 String province = localeResultObj.getString("province");
                 boolean unknownFlag = StrUtil.equals(province, "[]");
                 LinkLocaleStatsDO linkLocaleStatsDO = LinkLocaleStatsDO.builder()
-                        .province(unknownFlag ? "未知" : province)
-                        .city(unknownFlag ? "未知" : localeResultObj.getString("city"))
+                        .province(actualProvince = unknownFlag ? actualProvince : province)
+                        .city(actualCity = unknownFlag ? actualCity : localeResultObj.getString("city"))
                         .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
                         .cnt(1)
                         .fullShortUrl(fullShortUrl)
                         .country("中国")
-                        .date(new Date())
+                        .date(currentDate)
                         .build();
                 linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
-            // 获取操作系统信息
-                LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
-                        .os(LinkUtil.getOs(((HttpServletRequest) request)))
-                        .cnt(1)
-                        .fullShortUrl(fullShortUrl)
-                        .date(new Date())
-                        .build();
-                linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
-            // 获取浏览器信息
-                LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
-                        .browser(LinkUtil.getBrowser(((HttpServletRequest) request)))
-                        .cnt(1)
-                        .fullShortUrl(fullShortUrl)
-                        .date(new Date())
-                        .build();
-                linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
-            // 获取设备信息
-                LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
-                        .device(LinkUtil.getDevice(((HttpServletRequest) request)))
-                        .cnt(1)
-                        .fullShortUrl(fullShortUrl)
-                        .date(new Date())
-                        .build();
-                linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
-            // 获取网络信息
-                LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
-                        .network(LinkUtil.getNetwork(((HttpServletRequest) request)))
-                        .cnt(1)
-                        .fullShortUrl(fullShortUrl)
-                        .date(new Date())
-                        .build();
-                linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
             }
+
+            LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                    .os(os)
+                    .cnt(1)
+                    .fullShortUrl(fullShortUrl)
+                    .date(currentDate)
+                    .build();
+            linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
+
+            LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
+                    .browser(browser)
+                    .cnt(1)
+                    .fullShortUrl(fullShortUrl)
+                    .date(currentDate)
+                    .build();
+            linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
+
+            LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
+                    .device(device)
+                    .cnt(1)
+                    .fullShortUrl(fullShortUrl)
+                    .date(currentDate)
+                    .build();
+            linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+
+            LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                    .network(network)
+                    .cnt(1)
+                    .fullShortUrl(fullShortUrl)
+                    .date(currentDate)
+                    .build();
+            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
+
+            LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
+                    .user(UserContext.getUsername())
+                    .ip(remoteAddr)
+                    .browser(browser)
+                    .os(os)
+                    .network(network)
+                    .device(device)
+                    .locale(StrUtil.join("-", "中国", actualProvince, actualCity))
+                    .fullShortUrl(fullShortUrl)
+                    .build();
+            linkAccessLogsMapper.insert(linkAccessLogsDO);
+
+            shortLinkMapper.incrementStats(fullShortUrl, 1, isNewUv ? 1 : 0, isNewUip ? 1 : 0);
+
+            LinkStatsTodayDO linkStatsTodayDO = LinkStatsTodayDO.builder()
+                    .todayPv(1)
+                    .todayUv(isNewUv ? 1 : 0)
+                    .todayUip(isNewUip ? 1 : 0)
+                    .fullShortUrl(fullShortUrl)
+                    .date(currentDate)
+                    .build();
+            linkStatsTodayMapper.shortLinkTodayState(linkStatsTodayDO);
         } catch (Throwable ex) {
-            throw new ServiceException(SHORT_LINK_STATS_RECORD_ERROR);
+            // throw new ServiceException(SHORT_LINK_STATS_RECORD_ERROR);
+            throw ex;
         }
     }
 

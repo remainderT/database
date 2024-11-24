@@ -5,19 +5,18 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.buaa.shortlink.common.database.BaseDO;
 
 import java.util.Date;
 
 /**
- * 短链接基础访问监控实体
+ * 短链接今日统计实体
  */
+@TableName("t_link_stats_today")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("t_link_access_stats")
-public class LinkAccessStatsDO extends BaseDO {
+public class LinkStatsTodayDO {
 
     /**
      * id
@@ -25,7 +24,7 @@ public class LinkAccessStatsDO extends BaseDO {
     private Long id;
 
     /**
-     * 完整短链接
+     * 短链接
      */
     private String fullShortUrl;
 
@@ -35,27 +34,18 @@ public class LinkAccessStatsDO extends BaseDO {
     private Date date;
 
     /**
-     * 访问量
+     * 今日pv
      */
-    private Integer pv;
+    private Integer todayPv;
 
     /**
-     * 独立访客数
+     * 今日uv
      */
-    private Integer uv;
+    private Integer todayUv;
 
     /**
-     * 独立ip数
+     * 今日ip数
      */
-    private Integer uip;
+    private Integer todayUip;
 
-    /**
-     * 小时
-     */
-    private Integer hour;
-
-    /**
-     * 星期
-     */
-    private Integer weekday;
 }
