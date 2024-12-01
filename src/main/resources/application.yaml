@@ -30,6 +30,13 @@ spring:
       prefix: /templates/
       suffix: .html
 
+  aliyun:
+    oss:
+      endpoint: https://oss-cn-beijing.aliyuncs.com
+      accessKeyId: ${ALIBABA_ACCESS_KEY_ID}
+      accessKeySecret: ${ALIBABA_ACCESS_KEY_SECRET}
+      bucketName: oss-symbol
+
 short-link:
   domain:
     default: buaa.link:8000

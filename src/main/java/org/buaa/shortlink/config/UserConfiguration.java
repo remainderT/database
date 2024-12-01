@@ -2,7 +2,7 @@ package org.buaa.shortlink.config;
 
 import org.buaa.shortlink.common.biz.user.LoginCheckFilter;
 import org.buaa.shortlink.common.biz.user.RefreshTokenFilter;
-import org.buaa.shortlink.dao.mapper.UserTokenMapper;
+import org.buaa.shortlink.cache.UserTokenCache;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +17,9 @@ public class UserConfiguration {
      * 刷新 Token 过滤器
      */
     @Bean
-    public FilterRegistrationBean<RefreshTokenFilter> globalRefreshTokenFilter(UserTokenMapper userTokenMapper) {
+    public FilterRegistrationBean<RefreshTokenFilter> globalRefreshTokenFilter(UserTokenCache tokenCache) {
         FilterRegistrationBean<RefreshTokenFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new RefreshTokenFilter(userTokenMapper));
+        registration.setFilter(new RefreshTokenFilter(tokenCache));
         registration.addUrlPatterns("/*");
         registration.setOrder(0);
         return registration;

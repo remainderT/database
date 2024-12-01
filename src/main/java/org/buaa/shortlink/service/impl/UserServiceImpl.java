@@ -7,16 +7,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.buaa.shortlink.cache.MailCodeCache;
+import org.buaa.shortlink.cache.UserTokenCache;
 import org.buaa.shortlink.common.biz.user.UserContext;
 import org.buaa.shortlink.common.consts.MailSendConstants;
 import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
-import org.buaa.shortlink.dao.entity.MailCodeDO;
 import org.buaa.shortlink.dao.entity.UserDO;
-import org.buaa.shortlink.dao.entity.UserTokenDO;
-import org.buaa.shortlink.dao.mapper.MailCodeMapper;
 import org.buaa.shortlink.dao.mapper.UserMapper;
-import org.buaa.shortlink.dao.mapper.UserTokenMapper;
 import org.buaa.shortlink.dto.req.UserLoginReqDTO;
 import org.buaa.shortlink.dto.req.UserRegisterReqDTO;
 import org.buaa.shortlink.dto.req.UserUpdateReqDTO;
@@ -32,15 +30,11 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.Objects;
 
-import static org.buaa.shortlink.common.consts.MailSendConstants.CODE_EXPIRE_TIME;
 import static org.buaa.shortlink.common.consts.UserConstants.DEFAULT_GROUP_NAME;
-import static org.buaa.shortlink.common.consts.UserConstants.TOKEN_EXPIRE_TIME;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.MAIL_SEND_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_ERROR;
-import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_EXPIRED;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_NULL;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_EXIST;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
@@ -59,8 +53,8 @@ import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_UPDATE_ERRO
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
     private final JavaMailSender mailSender;
-    private final MailCodeMapper mailCodeMapper;
-    private final UserTokenMapper userTokenMapper;
+    private final MailCodeCache mailCodeCache;
+    private final UserTokenCache tokenCache;
     private final GroupService groupService;
 
 
@@ -100,12 +94,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         } catch (Exception e) {
             throw new ServiceException(MAIL_SEND_ERROR);
         }
-        MailCodeDO mailCodeDO = MailCodeDO.builder()
-                .mail(mail)
-                .code(code)
-                .expireTime(new Date(System.currentTimeMillis() + CODE_EXPIRE_TIME))
-                .build();
-        mailCodeMapper.insert(mailCodeDO);
+        mailCodeCache.put(mail, code);
         return true;
     }
 
@@ -115,12 +104,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (code == null) {
             throw new ClientException(USER_CODE_NULL);
         }
-        String cacheCode = mailCodeMapper.selectCodeByMail(requestParam.getMail());
+        String cacheCode = mailCodeCache.get(requestParam.getMail());
         if (!Objects.equals(code, cacheCode)) {
             throw new ClientException(USER_CODE_ERROR);
-        }
-        if (mailCodeMapper.selectCodeIsExpired(requestParam.getMail())) {
-            throw new ClientException(USER_CODE_EXPIRED);
         }
         if (hasUsername(requestParam.getUsername())) {
             throw new ClientException(USER_NAME_EXIST);
@@ -147,36 +133,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (!Objects.equals(userDO.getPassword(), requestParam.getPassword())) {
             throw new ClientException(USER_PASSWORD_ERROR);
         }
-        LambdaQueryWrapper<UserTokenDO> tokenQueryWrapper = Wrappers.lambdaQuery(UserTokenDO.class)
-                .eq(UserTokenDO::getUsername, requestParam.getUsername())
-                .gt(UserTokenDO::getExpireTime, new Date());
-        UserTokenDO tokenDO = userTokenMapper.selectOne(tokenQueryWrapper);
-        if (tokenDO != null) {
+        String oldToken = tokenCache.get(requestParam.getUsername());
+        if (oldToken != null) {
             throw new ClientException(USER_REPEATED_LOGIN);
         }
         String uuid = UUID.randomUUID().toString();
-        UserTokenDO userTokenDO = UserTokenDO.builder()
-                .username(requestParam.getUsername())
-                .token(uuid)
-                .expireTime(new Date(System.currentTimeMillis() + TOKEN_EXPIRE_TIME))
-                .build();
-        userTokenMapper.insert(userTokenDO);
+        tokenCache.put(requestParam.getUsername(), uuid);
+
         return new UserLoginRespDTO(uuid);
     }
 
     @Override
     public void logout(String username, String token) {
         if (checkLogin(username, token)) {
-            LambdaUpdateWrapper<UserTokenDO> updateWrapper = Wrappers.lambdaUpdate(UserTokenDO.class)
-                    .eq(UserTokenDO::getUsername, username)
-                    .eq(UserTokenDO::getToken, token)
-                    .gt(UserTokenDO::getExpireTime, new Date())
-                    .eq(UserTokenDO::getDelFlag, 0);
-            UserTokenDO userTokenDO= UserTokenDO.builder()
-                    .build();
-            userTokenDO.setDelFlag(1);
-            userTokenMapper.update(userTokenDO, updateWrapper);
-            return;
+            tokenCache.evict(username);
         }
         throw new ClientException(USER_TOKEN_NULL);
     }
@@ -184,16 +154,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public Boolean checkLogin(String username, String token) {
-        LambdaQueryWrapper<UserTokenDO> tokenQueryWrapper = Wrappers.lambdaQuery(UserTokenDO.class)
-                .eq(UserTokenDO::getUsername, username)
-                .eq(UserTokenDO::getToken, token)
-                .gt(UserTokenDO::getExpireTime, new Date())
-                .eq(UserTokenDO::getDelFlag, 0);
-        UserTokenDO tokenDO = userTokenMapper.selectOne(tokenQueryWrapper);
-        if (tokenDO != null) {
-            return true;
-        }
-        return false;
+        return Objects.equals(tokenCache.get(username), token);
     }
 
     @Override
@@ -214,14 +175,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         baseMapper.update(userDO, updateWrapper);
         // 修改token表中的username
         if (!Objects.equals(requestParam.getOldUsername(), requestParam.getNewUsername())) {
-            LambdaUpdateWrapper<UserTokenDO> tokenUpdateWrapper = Wrappers.lambdaUpdate(UserTokenDO.class)
-                    .eq(UserTokenDO::getUsername, requestParam.getOldUsername())
-                    .eq(UserTokenDO::getDelFlag, 0)
-                    .gt(UserTokenDO::getExpireTime, new Date());
-            UserTokenDO userTokenDO = UserTokenDO.builder()
-                    .username(requestParam.getNewUsername())
-                    .build();
-            userTokenMapper.update(userTokenDO, tokenUpdateWrapper);
+            String token = tokenCache.get(requestParam.getOldUsername());
+            tokenCache.put(requestParam.getNewUsername(), token);
         }
     }
 

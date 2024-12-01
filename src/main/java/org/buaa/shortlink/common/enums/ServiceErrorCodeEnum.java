@@ -14,7 +14,9 @@ public enum ServiceErrorCodeEnum implements IErrorCode {
 
     SHORT_LINK_EXPIRED("B000105", "短链接已过期"),
 
-    SHORT_LINK_STATS_RECORD_ERROR("B000106", "短链接访问记录错误");
+    SHORT_LINK_STATS_RECORD_ERROR("B000106", "短链接访问记录错误"),
+
+    IMAGE_UPLOAD_ERROR("B000107", "图片上传错误");
 
     private final String code;
 

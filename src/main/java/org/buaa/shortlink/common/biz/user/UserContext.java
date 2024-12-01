@@ -20,16 +20,6 @@ public final class UserContext {
     }
 
     /**
-     * 获取上下文中用户 ID
-     *
-     * @return 用户 ID
-     */
-    public static String getUserId() {
-        UserInfoDTO userInfoDTO = USER_THREAD_LOCAL.get();
-        return Optional.ofNullable(userInfoDTO).map(UserInfoDTO::getUserId).orElse(null);
-    }
-
-    /**
      * 获取上下文中用户名称
      *
      * @return 用户名称
