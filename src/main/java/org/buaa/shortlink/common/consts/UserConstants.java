@@ -5,7 +5,7 @@ public class UserConstants {
     /**
      * 用户登录token过期时间
      */
-    public static final long TOKEN_EXPIRE_TIME = 30L * 60 * 1000;
+    public static final long TOKEN_EXPIRE_TIME = 30L;
 
     /**
      * 用户分组最大数量

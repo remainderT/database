@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.buaa.shortlink.common.consts.UserConstants.TOKEN_EXPIRE_TIME;
+
 /**
  * Token缓存
  */
@@ -16,7 +18,7 @@ public class UserTokenCache {
 
     public UserTokenCache() {
         this.tokenCache = Caffeine.newBuilder()
-                .expireAfterWrite(30, TimeUnit.MINUTES)
+                .expireAfterWrite(TOKEN_EXPIRE_TIME, TimeUnit.MINUTES)
                 .build();
     }
 
