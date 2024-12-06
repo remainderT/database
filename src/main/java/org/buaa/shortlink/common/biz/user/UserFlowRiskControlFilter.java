@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.buaa.shortlink.cache.FlowLimitCache;
 import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.result.Results;
 
@@ -19,28 +21,39 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
 
-import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_TOKEN_NULL;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_FLOW_LIMIT;
 
 /**
- * 登录检验过滤器
+ * 用户操作流量风控过滤器
  */
+@Slf4j
 @RequiredArgsConstructor
-public class LoginCheckFilter implements Filter {
+public class UserFlowRiskControlFilter implements Filter {
+
+    private final FlowLimitCache flowLimitCache;
+
+    private final Long maxAccessCount = 2L;
 
     private static final List<String> IGNORE_URI = Lists.newArrayList(
             "/api/short-link/user/login",
             "/api/short-link/user/send-code"
     );
 
+
     @SneakyThrows
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
-        if(needCheck(servletRequest) &&  UserContext.getUsername() == null){
-            sendUnauthorizedResponse(httpServletResponse);
-            return;
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        if (needCheck(request)) {
+            String username = UserContext.getUsername();
+            int count = flowLimitCache.incrAndGet(username);
+            if (count > maxAccessCount) {
+                log.error("用户请求流量超限: " + username);
+                sendFlowLimitResponse((HttpServletResponse) httpResponse);
+                return;
+            }
         }
-        filterChain.doFilter(servletRequest, servletResponse);
+        filterChain.doFilter(request, response);
     }
 
     public Boolean needCheck(ServletRequest servletRequest) {
@@ -55,11 +68,11 @@ public class LoginCheckFilter implements Filter {
         return false;
     }
 
-    private void sendUnauthorizedResponse(HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    private void sendFlowLimitResponse(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
         response.setContentType("application/json; charset=UTF-8");
         PrintWriter writer = response.getWriter();
-        writer.write(JSON.toJSONString(Results.failure(new ClientException(USER_TOKEN_NULL))));
+        writer.write(JSON.toJSONString(Results.failure(new ClientException(USER_FLOW_LIMIT))));
         writer.flush();
         writer.close();
     }
