@@ -1,6 +1,8 @@
 package org.buaa.shortlink.common.biz.user;
 
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -15,9 +17,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.buaa.shortlink.cache.FlowLimitCache;
 import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.result.Results;
+import org.buaa.shortlink.dao.entity.Alert;
+import org.buaa.shortlink.dao.entity.UserDO;
+import org.buaa.shortlink.dao.mapper.UserMapper;
+import org.buaa.shortlink.toolkit.FeiShuAlert;
+import org.buaa.shortlink.toolkit.LinkUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,6 +41,8 @@ public class UserFlowRiskControlFilter implements Filter {
 
     private final FlowLimitCache flowLimitCache;
 
+    private final UserMapper baseMapper;
+
     private final Long maxAccessCount = 2L;
 
     private static final List<String> IGNORE_URI = Lists.newArrayList(
@@ -39,6 +50,7 @@ public class UserFlowRiskControlFilter implements Filter {
             "/api/short-link/user/send-code"
     );
 
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @SneakyThrows
     @Override
@@ -48,8 +60,23 @@ public class UserFlowRiskControlFilter implements Filter {
             String username = UserContext.getUsername();
             int count = flowLimitCache.incrAndGet(username);
             if (count > maxAccessCount) {
-                log.error("用户请求流量超限: " + username);
-                sendFlowLimitResponse((HttpServletResponse) httpResponse);
+                log.error("用户请求流量超限: {}", username);
+                LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
+                        .eq(UserDO::getUsername, username);
+                UserDO userDO = baseMapper.selectOne(queryWrapper);
+                HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+                String api = httpServletRequest.getRequestURI();
+                String ip = LinkUtil.getActualIp(httpServletRequest);
+                String time = LocalDateTime.now().format(formatter);
+                Alert message = Alert.builder().
+                        username(username).
+                        time(time).
+                        mail(userDO.getMail()).
+                        api(api).
+                        ip(ip).
+                        build();
+                FeiShuAlert.sendCardMessage(message);
+                sendFlowLimitResponse(httpResponse);
                 return;
             }
         }

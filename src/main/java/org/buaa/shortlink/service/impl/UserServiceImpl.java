@@ -50,7 +50,7 @@ import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_UPDATE_ERRO
  */
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
+public class  UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
     private final JavaMailSender mailSender;
     private final MailCodeCache mailCodeCache;

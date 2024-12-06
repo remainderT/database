@@ -5,6 +5,7 @@ import org.buaa.shortlink.cache.UserTokenCache;
 import org.buaa.shortlink.common.biz.user.LoginCheckFilter;
 import org.buaa.shortlink.common.biz.user.RefreshTokenFilter;
 import org.buaa.shortlink.common.biz.user.UserFlowRiskControlFilter;
+import org.buaa.shortlink.dao.mapper.UserMapper;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,9 +44,9 @@ public class UserConfiguration {
      * 用户操作流量风控过滤器
      */
     @Bean
-    public FilterRegistrationBean<UserFlowRiskControlFilter> globalUserFlowRiskControlFilter(FlowLimitCache flowLimitCache) {
+    public FilterRegistrationBean<UserFlowRiskControlFilter> globalUserFlowRiskControlFilter(FlowLimitCache flowLimitCache, UserMapper userMapper) {
         FilterRegistrationBean<UserFlowRiskControlFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new UserFlowRiskControlFilter(flowLimitCache));
+        registration.setFilter(new UserFlowRiskControlFilter(flowLimitCache, userMapper));
         registration.addUrlPatterns("/*");
         registration.setOrder(2);
         return registration;
