@@ -1,9 +1,15 @@
 package org.buaa.shortlink.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
+import org.buaa.shortlink.dao.entity.LinkAccessLogsDO;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
 import org.buaa.shortlink.dao.entity.LinkDeviceStatsDO;
 import org.buaa.shortlink.dao.entity.LinkLocaleStatsDO;
@@ -15,8 +21,10 @@ import org.buaa.shortlink.dao.mapper.LinkDeviceStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkLocaleStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkNetworkStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkOsStatsMapper;
+import org.buaa.shortlink.dto.req.ShortLinkStatsAccessRecordReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkStatsReqDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkStatsAccessDailyRespDTO;
+import org.buaa.shortlink.dto.resp.ShortLinkStatsAccessRecordRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkStatsBrowserRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkStatsDeviceRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkStatsLocaleRespDTO;
@@ -215,6 +223,21 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 .deviceStats(deviceStats)
                 .networkStats(networkStats)
                 .build();
+    }
+
+    @Override
+    public IPage<ShortLinkStatsAccessRecordRespDTO> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        LambdaQueryWrapper<LinkAccessLogsDO> queryWrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
+                .eq(LinkAccessLogsDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .between(LinkAccessLogsDO::getCreateTime, requestParam.getStartDate(), requestParam.getEndDate())
+                .eq(LinkAccessLogsDO::getDelFlag, 0)
+                .orderByDesc(LinkAccessLogsDO::getCreateTime);
+        IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectPage(requestParam, queryWrapper);
+        if (CollUtil.isEmpty(linkAccessLogsDOIPage.getRecords())) {
+            return new Page<>();
+        }
+        IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
+        return actualResult;
     }
 
 }
