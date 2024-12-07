@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 短链接控制层
@@ -36,6 +37,14 @@ public class ShortLinkController {
     @PostMapping("/api/short-link/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         return Results.success(shortLinkService.createShortLink(requestParam));
+    }
+
+    /**
+     * 根据图片生成短链接
+     */
+    @PostMapping("/api/short-link/image/create")
+    public Result<ShortLinkCreateRespDTO> ossUploadImage(@RequestParam("file") MultipartFile file, String gid, String describe) {
+        return Results.success(shortLinkService.createShortLinkByImage(file, gid, describe));
     }
 
     /**

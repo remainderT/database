@@ -56,12 +56,15 @@ import org.buaa.shortlink.dto.resp.ShortLinkCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkPageRespDTO;
 import org.buaa.shortlink.service.ShortLinkService;
 import org.buaa.shortlink.toolkit.HashGenerator;
+import org.buaa.shortlink.toolkit.ImageUpload;
 import org.buaa.shortlink.toolkit.LinkUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -102,20 +105,42 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
+    private final ImageUpload imageUpload;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
-        String shortLinkSuffix = generateSuffix(requestParam);
+        String shortLinkSuffix = generateSuffix(requestParam.getOriginUrl());
         ShortLinkDO shortLinkDO = BeanUtil.toBean(requestParam, ShortLinkDO.class);
         shortLinkDO.setShortUri(shortLinkSuffix);
         shortLinkDO.setDomain(createShortLinkDefaultDomain);
         shortLinkDO.setFullShortUrl(shortLinkDO.getDomain() + "/" + shortLinkSuffix);
-//        shortLinkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
+        shortLinkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
         baseMapper.insert(shortLinkDO);
         return ShortLinkCreateRespDTO.builder()
                 .fullShortUrl(shortLinkDO.getFullShortUrl())
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
+                .build();
+    }
+
+    @Override
+    public ShortLinkCreateRespDTO createShortLinkByImage(@RequestParam("file") MultipartFile file, String gid, String describe) {
+        String ossUrl = imageUpload.uploadImage(file);
+        String shortLinkSuffix = generateSuffix(ossUrl);
+        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .originUrl(ossUrl)
+                .describe(describe)
+                .gid(gid)
+                .domain(createShortLinkDefaultDomain)
+                .validDateType(0)
+                .fullShortUrl(createShortLinkDefaultDomain + "/" + shortLinkSuffix)
+                .createdType(0)
+                .build();
+        baseMapper.insert(shortLinkDO);
+        return ShortLinkCreateRespDTO.builder()
+                .fullShortUrl(shortLinkDO.getFullShortUrl())
+                .originUrl(ossUrl)
+                .gid(gid)
                 .build();
     }
 
@@ -189,10 +214,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         baseMapper.update(shortLinkDO, updateWrapper);
     }
 
-    private String generateSuffix(ShortLinkCreateReqDTO requestParam) {
+    private String generateSuffix(String originUrl) {
         int customGenerateCount = 0;
-        String originUrl = requestParam.getOriginUrl();
         String shortUri = HashGenerator.hashToBase62(originUrl);
+        if (shortUri.length() == 5) {
+            shortUri += 'a';
+        }
         while (true) {
             if (customGenerateCount > 10) {
                 throw new ServiceException(SHORT_LINK_GENERATE_ERROR);
@@ -203,7 +230,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             if (shortLinkDO == null) {
                 return shortUri;
             }
-            shortUri = HashGenerator.hashToBase62(originUrl + UUID.randomUUID().toString());
+            shortUri = HashGenerator.hashToBase62(originUrl + UUID.randomUUID());
             customGenerateCount++;
         }
     }

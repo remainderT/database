@@ -1,13 +1,12 @@
-package org.buaa.shortlink.service.impl;
+package org.buaa.shortlink.toolkit;
 
 import cn.hutool.core.util.StrUtil;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import lombok.RequiredArgsConstructor;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
-import org.buaa.shortlink.service.ImageService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -16,12 +15,9 @@ import java.util.UUID;
 
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.IMAGE_UPLOAD_ERROR;
 
-/**
- * 图片接口实现层
- */
-@Service
+@Component
 @RequiredArgsConstructor
-public class ImageServiceImpl implements ImageService  {
+public class ImageUpload {
 
     @Value("${spring.aliyun.oss.endpoint}")
     private String endpoint;
@@ -55,5 +51,4 @@ public class ImageServiceImpl implements ImageService  {
         String datePath = java.time.LocalDate.now().toString().replace("-", "/");
         return StrUtil.format("{}/{}.{}", datePath, name, suffix);
     }
-
 }

@@ -12,6 +12,8 @@ import org.buaa.shortlink.dto.req.ShortLinkUpdateReqDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkBatchCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkCreateRespDTO;
 import org.buaa.shortlink.dto.resp.ShortLinkPageRespDTO;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 短链接接口层
@@ -25,6 +27,16 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * @return 短链接创建信息
      */
     ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam);
+
+    /**
+     * 根据图片创建短链接
+     *
+     * @param          file     图片文件
+     *                 gid      分组标识
+     *                 describe 描述
+     * @return 短链接创建信息
+     */
+    ShortLinkCreateRespDTO createShortLinkByImage(@RequestParam("file") MultipartFile file, String gid, String describe);
 
     /**
      * 批量创建短链接
