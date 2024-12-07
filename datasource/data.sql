@@ -10,6 +10,7 @@ CREATE TABLE `t_user`
     `username`      varchar(256) DEFAULT NULL COMMENT '用户名',
     `password`      varchar(512) DEFAULT NULL COMMENT '密码',
     `mail`          varchar(512) DEFAULT NULL COMMENT '邮箱',
+    `is_vip`        tinyint(1) DEFAULT NULL COMMENT 'VIP标识 0：普通用户 1：VIP用户',
     `deletion_time` bigint(20) DEFAULT NULL COMMENT '注销时间戳',
     `create_time`   datetime     DEFAULT NULL COMMENT '创建时间',
     `update_time`   datetime     DEFAULT NULL COMMENT '修改时间',

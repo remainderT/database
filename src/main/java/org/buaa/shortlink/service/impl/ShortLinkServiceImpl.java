@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.buaa.shortlink.common.biz.user.UserContext;
 import org.buaa.shortlink.common.convention.exception.ClientException;
 import org.buaa.shortlink.common.convention.exception.ServiceException;
+import org.buaa.shortlink.common.enums.UserTypeEnum;
 import org.buaa.shortlink.common.enums.VailDateTypeEnum;
 import org.buaa.shortlink.dao.entity.LinkAccessLogsDO;
 import org.buaa.shortlink.dao.entity.LinkAccessStatsDO;
@@ -81,6 +82,7 @@ import static org.buaa.shortlink.common.consts.ShortLinkConstants.AMAP_REMOTE_UR
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_EXPIRED;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.SHORT_LINK_GENERATE_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.SHORT_LINK_NULL;
+import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_RIGHT_LIMIT;
 
 /**
  * 短链接接口实现层
@@ -125,6 +127,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public ShortLinkCreateRespDTO createShortLinkByImage(@RequestParam("file") MultipartFile file, String gid, String describe) {
+        if (!Objects.equals(UserContext.getIsVip(), UserTypeEnum.vip)) {
+            throw new ServiceException(USER_RIGHT_LIMIT);
+        }
         String ossUrl = imageUpload.uploadImage(file);
         String shortLinkSuffix = generateSuffix(ossUrl);
         ShortLinkDO shortLinkDO = ShortLinkDO.builder()

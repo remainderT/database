@@ -40,6 +40,16 @@ public final class UserContext {
     }
 
     /**
+     * 获取上下文中用户身份
+     *
+     * @return 用户身份
+     */
+    public static int getIsVip() {
+        UserInfoDTO userInfoDTO = USER_THREAD_LOCAL.get();
+        return Optional.ofNullable(userInfoDTO).map(UserInfoDTO::getIsVip).orElse(null);
+    }
+
+    /**
      * 清理用户上下文
      */
     public static void removeUser() {

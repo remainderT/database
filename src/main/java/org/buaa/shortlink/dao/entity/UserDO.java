@@ -34,6 +34,11 @@ public class UserDO extends BaseDO {
     private String mail;
 
     /**
+     * 用户身份
+     */
+    private int isVip;
+
+    /**
      * 注销时间戳
      */
     private Long deletionTime;

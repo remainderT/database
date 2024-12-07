@@ -23,4 +23,9 @@ public class UserRespDTO {
      * 邮箱
      */
     private String mail;
+
+    /**
+     * 用户身份
+     */
+    private int isVip;
 }
