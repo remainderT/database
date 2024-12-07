@@ -381,7 +381,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
 
             LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
-                    .user(UserContext.getUsername())
+                    .user(UserContext.getUsername() == null ? "未登录: " + remoteAddr : UserContext.getUsername())
                     .ip(remoteAddr)
                     .browser(browser)
                     .os(os)
