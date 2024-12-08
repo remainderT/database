@@ -16,4 +16,9 @@ public class UserConstants {
      * 用户创建默认分组
      */
     public static final String DEFAULT_GROUP_NAME = "默认分组";
+
+    /**
+     * 用户创建VIP分组
+     */
+    public static final String VIP_GROUP_NAME = "VIP分组";
 }

@@ -71,4 +71,11 @@ public interface UserService extends IService<UserDO> {
      * @param requestParam 更新用户信息请求参数
      */
     void update(UserUpdateReqDTO requestParam);
+
+
+    /**
+     * 用户升级
+     *
+     */
+    void upGrade();
 }

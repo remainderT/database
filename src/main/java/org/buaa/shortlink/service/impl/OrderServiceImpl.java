@@ -18,6 +18,7 @@ import org.buaa.shortlink.dao.entity.OrderDO;
 import org.buaa.shortlink.dao.mapper.OrderMapper;
 import org.buaa.shortlink.dto.resp.OrderCreateResp;
 import org.buaa.shortlink.service.OrderService;
+import org.buaa.shortlink.service.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -36,6 +37,7 @@ public class OrderServiceImpl  extends ServiceImpl<OrderMapper, OrderDO> impleme
     private final String CHARSET = "UTF-8";
     private final String SIGN_TYPE = "RSA2";
     private final AliPayConfig aliPayConfig;
+    private final UserService userService;
 
     @Override
     public OrderCreateResp createOrder() {
@@ -112,6 +114,7 @@ public class OrderServiceImpl  extends ServiceImpl<OrderMapper, OrderDO> impleme
                 orderDO.setPayTime(gmtPayment);
                 orderDO.setPayNo(alipayTradeNo);
                 baseMapper.updateById(orderDO);
+                userService.upGrade();
             }
         }
     }
