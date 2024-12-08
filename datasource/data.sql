@@ -215,3 +215,18 @@ CREATE TABLE `t_link_uip_stats` (
    PRIMARY KEY (`id`),
    UNIQUE KEY `idx_unique_uip_stats` (`full_short_url`,`ip`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_order`;
+CREATE TABLE `t_order`  (
+     `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+     `username`      varchar(256) DEFAULT NULL COMMENT '用户名',
+     `goods_name` varchar(255) DEFAULT NULL COMMENT '商品名称',
+     `amount` decimal(10, 2) DEFAULT NULL COMMENT '价格',
+     `pay_no` varchar(255)  DEFAULT NULL COMMENT '支付编号',
+     `pay_time` datetime DEFAULT NULL COMMENT '支付时间',
+     `status` varchar(255)  DEFAULT NULL COMMENT '订单状态',
+     `create_time`    datetime     DEFAULT NULL COMMENT '创建时间',
+     `update_time`    datetime     DEFAULT NULL COMMENT '修改时间',
+     `del_flag`       tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',
+     PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -47,7 +47,10 @@ public class UserFlowRiskControlFilter implements Filter {
 
     private static final List<String> IGNORE_URI = Lists.newArrayList(
             "/api/short-link/user/login",
-            "/api/short-link/user/send-code"
+            "/api/short-link/user/send-code",
+            "/api/short-link/order/notify",
+            "/api/short-link/order/success",
+            "/api/short-link/order/pay"   // 测试
     );
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
