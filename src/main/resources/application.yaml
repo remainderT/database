@@ -37,6 +37,10 @@ spring:
       accessKeySecret: ${ALIBABA_ACCESS_KEY_SECRET}
       bucketName: oss-symbol
 
+flow-limit:
+  enable: true
+  time-window: 1
+  max-access-count: 2
 
 short-link:
   domain:
