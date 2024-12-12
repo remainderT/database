@@ -12,6 +12,7 @@ import lombok.SneakyThrows;
 import org.buaa.shortlink.cache.UserTokenCache;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * 刷新 Token 过滤器
@@ -33,7 +34,7 @@ public class RefreshTokenFilter implements Filter {
         }
 
         String userToken = tokenCache.get(username);
-        if (userToken == null) {
+        if (userToken == null || !Objects.equals(userToken, token)) {
             filterChain.doFilter(servletRequest, servletResponse);
             return;
         }
