@@ -32,7 +32,7 @@ public class OrderController {
      * 支付订单
      */
     @GetMapping("/api/short-link/order/pay")
-    public void payOrder(long id, HttpServletResponse httpResponse) {
+    public void payOrder(String id, HttpServletResponse httpResponse) {
         orderService.payOrder(id, httpResponse);
     }
 

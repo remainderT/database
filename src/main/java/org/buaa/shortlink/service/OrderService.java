@@ -19,7 +19,7 @@ public interface OrderService extends IService<OrderDO> {
     /**
      * 支付订单
      */
-    void payOrder(long id, HttpServletResponse httpResponse);
+    void payOrder(String id, HttpServletResponse httpResponse);
 
     /**
      * 支付宝回调通知

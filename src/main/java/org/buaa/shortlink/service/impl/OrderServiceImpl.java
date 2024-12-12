@@ -50,7 +50,7 @@ public class OrderServiceImpl  extends ServiceImpl<OrderMapper, OrderDO> impleme
                 .build();
         baseMapper.insert(orderDO);
         return OrderCreateResp.builder()
-                .id(orderDO.getId())
+                .id(String.valueOf(orderDO.getId()))
                 .username(orderDO.getUsername())
                 .goodsName(orderDO.getGoodsName())
                 .amount(orderDO.getAmount())
@@ -59,7 +59,7 @@ public class OrderServiceImpl  extends ServiceImpl<OrderMapper, OrderDO> impleme
 
     @Override
     @SneakyThrows
-    public void payOrder(long id, HttpServletResponse httpResponse)  {
+    public void payOrder(String id, HttpServletResponse httpResponse)  {
         OrderDO orderDO = baseMapper.selectById(id);
         if (orderDO == null) {
             return;

@@ -17,7 +17,7 @@ public class OrderCreateResp {
     /**
      * id
      */
-    private Long id;
+    private String id;
 
     /**
      * 用户名
