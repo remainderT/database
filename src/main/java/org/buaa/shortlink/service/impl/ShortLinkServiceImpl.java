@@ -145,6 +145,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .validDateType(0)
                 .fullShortUrl(createShortLinkDefaultDomain + "/" + shortLinkSuffix)
                 .createdType(0)
+                .isPic(1)
                 .build();
         baseMapper.insert(shortLinkDO);
         return ShortLinkCreateRespDTO.builder()

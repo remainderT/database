@@ -40,7 +40,7 @@ spring:
 flow-limit:
   enable: true
   time-window: 1
-  max-access-count: 2
+  max-access-count: 5
 
 short-link:
   domain:

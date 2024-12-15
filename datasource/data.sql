@@ -50,6 +50,7 @@ CREATE TABLE `t_link`
     `valid_date_type` tinyint(1) DEFAULT NULL COMMENT '有效期类型 0：永久有效 1：自定义',
     `valid_date`      datetime                                       DEFAULT NULL COMMENT '有效期',
     `describe`        varchar(1024)                                  DEFAULT NULL COMMENT '描述',
+    `is_pic`          tinyint(1) DEFAULT 0 COMMENT '是否图片 0：否 1：是',
     `total_pv`        int(11) DEFAULT 0 COMMENT '历史PV',
     `total_uv`        int(11) DEFAULT 0 COMMENT '历史UV',
     `total_uip`       int(11) DEFAULT 0 COMMENT '历史UIP',

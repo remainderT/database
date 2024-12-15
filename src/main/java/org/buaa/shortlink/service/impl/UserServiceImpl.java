@@ -33,7 +33,6 @@ import org.springframework.stereotype.Service;
 import java.util.Objects;
 
 import static org.buaa.shortlink.common.consts.UserConstants.DEFAULT_GROUP_NAME;
-import static org.buaa.shortlink.common.consts.UserConstants.VIP_GROUP_NAME;
 import static org.buaa.shortlink.common.enums.ServiceErrorCodeEnum.MAIL_SEND_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_ERROR;
 import static org.buaa.shortlink.common.enums.UserErrorCodeEnum.USER_CODE_NULL;
@@ -189,7 +188,6 @@ public class  UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements
         LambdaUpdateWrapper<UserDO> updateWrapper = Wrappers.lambdaUpdate(UserDO.class)
                 .eq(UserDO::getUsername, UserContext.getUsername());
         baseMapper.update(userDO, updateWrapper);
-        groupService.saveGroup(VIP_GROUP_NAME);
     }
 
 }

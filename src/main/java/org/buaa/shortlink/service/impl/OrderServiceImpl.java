@@ -76,7 +76,7 @@ public class OrderServiceImpl  extends ServiceImpl<OrderMapper, OrderDO> impleme
         bizContent.set("subject", orderDO.getGoodsName());
         bizContent.set("product_code", "FAST_INSTANT_TRADE_PAY");
         request.setBizContent(bizContent.toString());
-        request.setReturnUrl("http://localhost:8000/api/short-link/order/success"); // 支付完成后自动跳转到本地页面的路径
+        request.setReturnUrl("http://localhost:8080/"); // 支付完成后自动跳转到本地页面的路径
 
         String form = "";
         try {

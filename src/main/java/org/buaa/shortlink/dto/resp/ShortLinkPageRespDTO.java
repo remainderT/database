@@ -88,4 +88,9 @@ public class ShortLinkPageRespDTO {
      */
     private Integer totalUip;
 
+    /**
+     * 是否是图片
+     */
+    private Integer isPic;
+
 }
