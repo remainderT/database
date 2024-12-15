@@ -12,12 +12,12 @@ public enum UserTypeEnum {
     /**
      * 普通用户
      */
-    ordinary(0),
+    ORDINARY(0),
 
     /**
      * vip用户
      */
-    vip(1);
+    VIP(1);
 
     @Getter
     private final int type;

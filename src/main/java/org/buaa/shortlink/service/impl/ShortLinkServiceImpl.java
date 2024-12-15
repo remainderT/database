@@ -37,6 +37,7 @@ import org.buaa.shortlink.dao.entity.LinkStatsTodayDO;
 import org.buaa.shortlink.dao.entity.LinkUipStatsDO;
 import org.buaa.shortlink.dao.entity.LinkUvStatsDO;
 import org.buaa.shortlink.dao.entity.ShortLinkDO;
+import org.buaa.shortlink.dao.entity.UserDO;
 import org.buaa.shortlink.dao.mapper.LinkAccessLogsMapper;
 import org.buaa.shortlink.dao.mapper.LinkAccessStatsMapper;
 import org.buaa.shortlink.dao.mapper.LinkBrowserStatsMapper;
@@ -48,6 +49,7 @@ import org.buaa.shortlink.dao.mapper.LinkStatsTodayMapper;
 import org.buaa.shortlink.dao.mapper.LinkUipStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.LinkUvStatsDOMapper;
 import org.buaa.shortlink.dao.mapper.ShortLinkMapper;
+import org.buaa.shortlink.dao.mapper.UserMapper;
 import org.buaa.shortlink.dto.req.ShortLinkBatchCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkCreateReqDTO;
 import org.buaa.shortlink.dto.req.ShortLinkPageReqDTO;
@@ -107,6 +109,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
+    private final UserMapper userMapper;
     private final ImageUpload imageUpload;
 
     @Override
@@ -127,7 +130,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public ShortLinkCreateRespDTO createShortLinkByImage(@RequestParam("file") MultipartFile file, String gid, String describe) {
-        if (!Objects.equals(UserContext.getIsVip(), UserTypeEnum.vip)) {
+        UserDO userDO = userMapper.selectOne(Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, UserContext.getUsername()));
+        if (!Objects.equals(userDO.getIsVip(), UserTypeEnum.VIP.getType())) {
             throw new ServiceException(USER_RIGHT_LIMIT);
         }
         String ossUrl = imageUpload.uploadImage(file);

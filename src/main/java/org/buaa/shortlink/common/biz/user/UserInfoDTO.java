@@ -20,11 +20,6 @@ public class UserInfoDTO {
     private String username;
 
     /**
-     * 用户身份
-     */
-    private int isVip;
-
-    /**
      * Token
      */
     private String token;
