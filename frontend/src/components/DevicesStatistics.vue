@@ -24,8 +24,7 @@ export default {
   data() {
     return {
       deviceData: [
-        { name: 'Computer', count: 6, percentage: 60 },
-        { name: 'Mobile Device', count: 4, percentage: 40 },
+        { name: 'Computer', count: 2, percentage: 100 },
       ],
     };
   },

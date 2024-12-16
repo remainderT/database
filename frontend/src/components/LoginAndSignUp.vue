@@ -1,3 +1,4 @@
+
 <template>
   <div class="auth-wrapper">
     <div class="background-animation"></div>
@@ -84,7 +85,7 @@
                     class="form-control"
                     placeholder="mail"
                     v-model="signUpForm.mail"
-                    @blur="validatemail"
+                    @blur="validatmail"
                 />
                 <div v-if="signUpForm.mailError" class="error-message">
                   {{ signUpForm.mailError }}
@@ -166,7 +167,7 @@
 </template>
 
 <script>
-import {inject} from "vue";
+import { inject } from "vue";
 export default {
   name: "AuthPage",
   data() {
@@ -198,7 +199,7 @@ export default {
       //切换值
       this.isLogin = !this.isLogin;
     },
-    validatemail() {
+    validatmail() {
       const mailPattern = /^2.*@buaa\.edu\.cn$/;
       if (!mailPattern.test(this.signUpForm.mail)) {
         this.signUpForm.mailError =
@@ -223,30 +224,31 @@ export default {
         }
       }, 1000);
 
-      try {
-        const url = `/api/short-link/user/send-code?mail=${encodeURIComponent(this.signUpForm.mail)}`;
+      const mail = this.signUpForm.mail;
 
-        const response = await fetch(url, {
+      try {
+        // send verification to backend
+        const response = await fetch(`/api/short-link/user/send-code?mail=${encodeURIComponent(mail)}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "token": this.headers.token,
-            "username": this.signUpForm.username,
           },
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // 验证码请求成功
-          alert("Verification Code has been sent to mail !");
+          // verification request success
+          alert("Verification code request successfully!");
         } else {
-          // 验证码请求失败
-          alert(`Verification code sent failed : ${data.message}`);
+          // verification request failed
+          alert(`Failed to request verification code: ${data.message}`);
         }
       } catch (error) {
-        console.error("Error when sending Verification Code :", error);
-        alert("Please try again later");
+        console.error("Error during sending verification code:", error);
+        alert(
+            "An error occurred while sending the verification code. Please try again later."
+        );
       }
     },
     async handleLogin() {
@@ -315,31 +317,27 @@ export default {
         username: this.signUpForm.username,
         mail: this.signUpForm.mail,
         password: this.signUpForm.password,
-        code: this.signUpForm.verificationCode,
+        verificationCode: this.signUpForm.verificationCode,
       };
 
       try {
-        console.log("Sending request with data:", requestData);
-
+        // send register request
         const response = await fetch("/api/short-link/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "token": this.headers.token,
-            "username": this.signUpForm.username,
           },
           body: JSON.stringify(requestData),
         });
 
         const data = await response.json();
-        console.log("Response from server:", data);
 
-        if (data.success) {
-          // 注册成功
+        if (response.ok) {
+          // register success
           alert("Registration successful!");
           this.toggleForm(); // 切换到登录
         } else {
-          // 注册失败
+          // register failed
           alert(`Registration failed: ${data.message}`);
         }
       } catch (error) {
@@ -373,19 +371,19 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  position: relative;
+  position: relative; /* 确保背景动画容器定位正确 */
 }
 
 .auth-inner {
   width: 800px;
   margin: auto;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.95); /* 增强透明度 */
   box-shadow: 0px 14px 80px rgba(34, 35, 58, 0.2);
-  padding: 0;
+  padding: 0; /* 去掉内边距 */
   border-radius: 15px;
   transition: all 0.3s;
-  position: relative;
-  z-index: 1;
+  position: relative; /* 确保内容在背景动画之上 */
+  z-index: 1; /* 确保内容在背景动画之上 */
   display: flex;
 }
 
@@ -430,6 +428,7 @@ export default {
   cursor: pointer;
 }
 
+/* 背景动画样式 */
 .background-animation {
   position: absolute;
   top: 0;

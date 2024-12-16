@@ -10,8 +10,10 @@ const headers = reactive({
 const isVip = ref(false);
 const app = createApp( App );
 const gid = ref( "gid" );
+const name = ref("");
 app.use(router);
 app.mount('#app')
 app.provide( 'headers', headers );
 app.provide( 'isVip', isVip );
 app.provide( "gid", gid );
+app.provide("name", name);

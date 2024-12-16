@@ -51,7 +51,7 @@
             <button
               v-if="this.index != index"
               class="custom-button"
-              @click="Query(item.gid, index)"
+              @click="Query(item.gid, index, item.name)"
             >
               <div v-if="item.name">{{ item.name }}</div>
               <div v-else>group{{ index }}</div>
@@ -251,7 +251,8 @@ export default {
     provide("link", nowLink);
         provide( "fetch", fetchShortLinks );
         provide( "headers", headers );
-    provide( "gid", gid );
+        provide( "gid", gid );
+        const name = inject("name");
     return {
       isVip,
       nowLink,
@@ -275,7 +276,8 @@ export default {
       dialogVisible,
       newGroupName,
       length,
-      fetchShortLinks,
+        fetchShortLinks,
+      name,
     };
   },
   methods: {
@@ -306,7 +308,6 @@ export default {
           // 提交表单
           const form = tempDiv.querySelector('form[name="punchout_form"]');
             if ( form ) {
-                form.setAttribute( "target", "_blank" );
                 form.submit();
           } else {
             console.error("未找到表单");
@@ -407,14 +408,15 @@ export default {
     sleep(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     },
-    async  Query( gid, index ) {
+    async  Query( gid, index, name ) {
       await this.sleep(1000);
         this.fetchShortLinks( gid );
         this.gid = gid;
       if (this.query) {
         this.query = false;
       }
-      this.index = index;
+        this.index = index;
+        this.name = name;
     },
     async deleteItem() {
       try {

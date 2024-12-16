@@ -36,15 +36,14 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="createdType">CreatedType</label>
-                      <select v-model="form.createdType" id="createdType">
-                        <option value="0">Interface</option>
-                        <option value="1">Console</option>
-                      </select>
+                      <div class="form-group">
+                      <label for="originUrl">CreationType</label>
+                      <h5 class="infinite-text">Console</h5>
+                    </div>
                     </div>
                     <div class="form-group">
-                      <label for="originUrl">Group Id</label>
-                      <h5 class="infinite-text">{{ gid }}</h5>
+                      <label for="originUrl">GroupName</label>
+                      <h5 class="infinite-text">{{ groupName }}</h5>
                     </div>
                     <div class="form-group">
                       <label for="validDateType">ValidDateType</label>
@@ -155,6 +154,7 @@ export default {
     const headers = inject("headers");
         const dialogVisible = inject( "dialogVisible" );
         const query = inject( "query" );
+        const groupName = inject("name");
     return {
       dialog,
       headers,
@@ -167,7 +167,8 @@ export default {
       submitForm,
       responseData,
         gid,
-        query
+        query,
+        groupName
     };
   },
     methods: {
