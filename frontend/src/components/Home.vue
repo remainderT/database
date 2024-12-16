@@ -237,7 +237,7 @@ export default {
       try {
         const response = await axios.get(`/api/short-link/page`, {
           headers: headers, // 请求头信息
-          params: { gid, current: 1, size: 1000 }, // gid 作为查询参数
+          params: { gid, current: 1, size: 10 }, // gid 作为查询参数
         });
         groupData.value = response.data.data.records;
         length.value = response.data.data.records.length;

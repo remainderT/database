@@ -81,7 +81,7 @@ export default {
       try {
         const response = await axios.get("/api/short-link/recycle-bin/page", {
           headers: headers,
-          params: { current: "1", size: "1000" },
+          params: { current: "1", size: "10" },
         });
         binData.value = response.data.data.records;
       } catch (error) {
