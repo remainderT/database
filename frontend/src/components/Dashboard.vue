@@ -25,6 +25,8 @@
     <WeekDistribution class="dashboard-item" />
     <BrowserRecords class="dashboard-item" />
     <DeviceStatistics class="dashboard-item" />
+    <NetworkStatistics class="dashboard-item" />
+    <OsStat class="dashboard-item" />
     <ShowMap class="dashboard-item" />
   </div>
   <div v-else>
@@ -55,13 +57,15 @@
 import { defineComponent } from "vue";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import WeekDistribution from "@/components/WeeklyStatistics.vue";
+import WeekDistribution from "@/components/DaysStatistics.vue";
 import DeviceStatistics from "@/components/DevicesStatistics.vue";
 import ShowMap from "@/components/Map.vue";
 import { inject, provide, ref } from "vue";
 import VisitedRecordsInADay from "./visitedRecordsInADay.vue";
 import BrowserRecords from "./browserRecords.vue";
 import axios from "axios";
+import NetworkStatistics from "./NetworkStatistics.vue";
+import OsStat from "./osStat.vue";
 
 export default defineComponent({
   name: "ShowDashboard",
@@ -69,7 +73,9 @@ export default defineComponent({
     VisitedRecordsInADay,
     WeekDistribution,
     BrowserRecords,
-    DeviceStatistics,
+      DeviceStatistics,
+      NetworkStatistics,
+    OsStat,
     ShowMap,
   },
   data() {

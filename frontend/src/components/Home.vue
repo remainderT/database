@@ -237,14 +237,14 @@ export default {
       try {
         const response = await axios.get(`/api/short-link/page`, {
           headers: headers, // 请求头信息
-          params: { gid, current: 1, size: 10 }, // gid 作为查询参数
+          params: { gid, current: 1, size: 1000 }, // gid 作为查询参数
         });
         groupData.value = response.data.data.records;
         length.value = response.data.data.records.length;
         console.log("Item fetched:", groupData.value);
       } catch (error) {
         console.error("Error getting item:", error);
-        alert("Failed to query");
+        alert("slow down");
       }
     };
 
@@ -409,7 +409,7 @@ export default {
       return new Promise((resolve) => setTimeout(resolve, ms));
     },
     async  Query( gid, index, name ) {
-      await this.sleep(1000);
+      await this.sleep(500);
         this.fetchShortLinks( gid );
         this.gid = gid;
       if (this.query) {

@@ -1,12 +1,12 @@
 <template>
   <div class="container">
-    <h2 style="color: black" class="custom-font">Visitor Network</h2>
-    <div class="network-container">
-      <div class="network-list">
-        <div v-for="(network, index) in networkData" :key="index" class="network-item">
-          <div class="network-name" style="color:black">{{ network.name }}</div>
-          <div class="network-count" style="color:black">{{ network.count }}</div>
-          <div class="network-percentage" style="color:black">{{ network.percentage*100 }}%</div>
+    <h2 style="color: black" class="custom-font">OS Statistics</h2>
+    <div class="os-container">
+      <div class="os-list">
+        <div v-for="(os, index) in osData" :key="index" class="os-item">
+          <div class="os-name" style="color:black">{{ os.name }}</div>
+          <div class="os-count" style="color:black">{{ os.count }}</div>
+          <div class="os-percentage" style="color:black">{{ os.percentage*100 }}%</div>
         </div>
       </div>
       <div class="chart-container">
@@ -21,10 +21,10 @@ import Chart from 'chart.js/auto';
 import { inject } from 'vue';
 
 export default {
-  name: "VisitorNetworkStatistics",
+  name: "OSStatistics",
   data() {
       return {
-        networkData:[]
+        osData:[]
     };
   },
   mounted() {
@@ -33,30 +33,30 @@ export default {
   methods: {
     createChart() {
           const ctx = this.$refs.chartCanvas.getContext( '2d' );
-          this.networkData = [];
+          this.osData = [];
           const temp = inject("response")._value;
       console.log(temp);
       const response = JSON.parse(JSON.stringify(temp));
           console.log( response );
           if ( response.data.data != null ) {
         let sum = 0;
-        for (let i = 0; i < response.data.data.networkStats.length; i++) {
-            sum += response.data.data.networkStats[i].cnt;
+        for (let i = 0; i < response.data.data.osStats.length; i++) {
+            sum += response.data.data.osStats[i].cnt;
         }
-        for (let i = 0; i < response.data.data.networkStats.length; i++) {
-            this.networkData.push( {
-                name: response.data.data.networkStats[ i ].network,
-                percentage: response.data.data.networkStats[ i ].cnt / sum,
-                count: response.data.data.networkStats[ i ].cnt
+        for (let i = 0; i < response.data.data.osStats.length; i++) {
+            this.osData .push( {
+                name: response.data.data.osStats[ i ].os,
+                percentage: response.data.data.osStats[ i ].cnt / sum,
+                count: response.data.data.osStats[ i ].cnt
             } );
         }
       }
       new Chart(ctx, {
         type: 'pie',
         data: {
-          labels: this.networkData.map(network => network.name),
+          labels: this.osData.map(OS => OS.name),
           datasets: [{
-            data: this.networkData.map(network => network.percentage),
+            data: this.osData.map(OS => OS.percentage),
             backgroundColor: ['#36A2EB', '#FF6384'],
             borderWidth: 1,
           }],
@@ -77,7 +77,7 @@ export default {
   margin: 0 auto;
 }
 
-.network-container {
+.os-container {
   display: flex;
   justify-content: space-between;
   border: 1px solid #ddd;
@@ -85,13 +85,13 @@ export default {
   padding: 20px;
 }
 
-.network-list {
+.os-list {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.network-item {
+.os-item {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
@@ -99,17 +99,17 @@ export default {
   border-bottom: 1px solid #ddd;
 }
 
-.network-name {
+.os-name {
   flex: 1;
   text-align: left;
 }
 
-.network-count {
+.os-count {
   flex: 1;
   text-align: center;
 }
 
-.network-percentage {
+.os-percentage {
   flex: 1;
   text-align: right;
 }

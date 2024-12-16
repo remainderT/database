@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h2 style="color:black" class="custom-font">Weekly Distribution</h2>
+    <h2 style="color: black" class="custom-font">Days Distribution</h2>
     <canvas ref="chartCanvas"></canvas>
   </div>
 </template>
@@ -17,28 +17,22 @@ export default {
   methods: {
     async createChart() {
       const link = inject("link");
-          const temp = inject( "response" )._value;
-          console.log(temp);
+      const temp = inject("response")._value;
+      console.log(temp);
       const response = JSON.parse(JSON.stringify(temp));
       console.log(response);
-      const days = ["Mon", "Tues", "Wed", "Thurs", "Friday", "Sat", "Sun"];
+      const days = ["1"];
       const shortLinkData = [
         {
           name: link.value,
-          distribution:
-            response.data.data == null
-              ? []
-              : [
-                  response.data.data.daily[0].pv,
-                  response.data.data.daily[1].pv,
-                  response.data.data.daily[2].pv,
-                  response.data.data.daily[3].pv,
-                  response.data.data.daily[4].pv,
-                  response.data.data.daily[5].pv,
-                  response.data.data.daily[6].pv,
-                ],
+          distribution: [],
         },
       ];
+      let n = response.data.data.daily.length;
+          for ( let i = 0; i < n; i++ ) {
+              days.push("The "+(i + 1)+"st Day" );
+              shortLinkData[0].distribution.push(response.data.data.daily[i].pv);
+      }
       const ctx = this.$refs.chartCanvas.getContext("2d");
       new Chart(ctx, {
         type: "bar",

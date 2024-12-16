@@ -21,43 +21,61 @@
     <div class="home-page">
       <div class="background-animation"></div>
       <div class="content">
-        <div class="scroll-container">
-          <table class="table table-striped table-hover shadow-sm">
-            <thead class="thead-dark">
-              <tr>
-                <th scope="col" class="custom-font">Gid</th>
-                <th scope="col" class="custom-font">Info</th>
-                <th scope="col" class="custom-font">FullShortUrl</th>
-                <th scope="col" class="custom-font">Edit</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in binData" :key="index">
-                <td class="custom-font">{{item.gid}}</td>
-                <td class="custom-font">{{ item.describe }}</td>
-                <td class="custom-font">
-                  <a href="{item.fullShortUrl}" target="_blank">{{
-                    item.fullShortUrl
-                  }}</a>
-                </td>
-                <td class="custom-font">
-                  <button
-                    class="custom-button"
-                    @click="restore(item.gid, item.fullShortUrl, index)"
-                  >
-                    Restore
-                  </button>
-                  <br />
-                  <button
-                    class="custom-button"
-                    @click="eliminate(item.gid, item.fullShortUrl, index)"
-                  >
-                    Eliminate
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <table class="table table-striped table-hover shadow-sm">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col" class="custom-font">Gid</th>
+              <th scope="col" class="custom-font">Info</th>
+              <th scope="col" class="custom-font">FullShortUrl</th>
+              <th scope="col" class="custom-font">Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in paginatedData" :key="index">
+              <td class="custom-font">{{ item.gid }}</td>
+              <td class="custom-font">{{ item.describe }}</td>
+              <td class="custom-font">
+                <a :href="item.fullShortUrl" target="_blank">{{
+                  item.fullShortUrl
+                }}</a>
+              </td>
+              <td class="custom-font">
+                <button
+                  class="custom-button"
+                  @click="restore(item.gid, item.fullShortUrl, index)"
+                >
+                  Restore
+                </button>
+                <br />
+                <button
+                  class="custom-button"
+                  @click="eliminate(item.gid, item.fullShortUrl, index)"
+                >
+                  Eliminate
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- Pagination Controls -->
+        <div class="pagination-container">
+          <button
+            class="custom-button"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            Previous
+          </button>
+          <span class="custom-font"
+            >Page {{ currentPage }} of {{ totalPages }}</span
+          >
+          <button
+            class="custom-button"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
@@ -66,52 +84,66 @@
 
 <script>
 import axios from "axios";
-import { inject, ref } from "vue";
+import { inject, ref, computed } from "vue";
 
 export default {
   name: "HomePage",
   setup() {
-    const isSidebarCollapsed = ref(false);
-    const toggleSidebar = () => {
-      isSidebarCollapsed.value = !isSidebarCollapsed.value;
-    };
     const binData = ref([]);
+    const currentPage = ref(1);
+    const pageSize = ref(5); // 每页显示条目数
     const headers = inject("headers");
+
+    // 计算分页数据
+    const paginatedData = computed(() => {
+      const start = (currentPage.value - 1) * pageSize.value;
+      const end = start + pageSize.value;
+      return binData.value.slice(start, end);
+    });
+
+    // 总页数
+    const totalPages = computed(() =>
+      Math.ceil(binData.value.length / pageSize.value)
+    );
+    const sleep = (ms) => {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    };
     const initialize = async () => {
+      await sleep(500);
       try {
         const response = await axios.get("/api/short-link/recycle-bin/page", {
           headers: headers,
-          params: { current: "1", size: "10" },
+          params: { current: "1", size: "1000" },
         });
         binData.value = response.data.data.records;
       } catch (error) {
-        console.error("Error:", error);
+          console.error( "Error:", error );
+          alert("slow down");
       }
     };
+
+    const changePage = (page) => {
+      if (page > 0 && page <= totalPages.value) {
+        currentPage.value = page;
+      }
+    };
+
     initialize();
+
     return {
-      isSidebarCollapsed,
-      toggleSidebar,
-      status: 1,
       binData,
-        headers,
-      initialize
+      currentPage,
+      pageSize,
+      paginatedData,
+      totalPages,
+      changePage,
+      initialize,
+      headers,
     };
   },
   methods: {
-    navigateToCreateShortlink() {
-      this.$router.push("/createShortLink");
-    },
-    navigateToRecycleBin() {
-      this.$router.push("/recycleBin");
-    },
-    navigateToMonitor() {
-      this.$router.push("/monitor");
-    },
-    navigateToMyGroup() {
-      this.$router.push("/myGroup");
-    },
     async restore(gid, fullShortUrl) {
+      alert(this.headers);
       try {
         await axios.post(
           "/api/short-link/recycle-bin/recover",
@@ -141,14 +173,11 @@ export default {
             headers: this.headers,
           }
         );
-          this.initialize();
+        this.initialize();
       } catch (error) {
         alert(error);
         console.log("Error:", error);
       }
-    },
-    start() {
-      this.$router.push("/createShortLink");
     },
     bin() {
       this.$router.push("/recycleBin");
@@ -159,11 +188,11 @@ export default {
     async logout() {
       try {
         const response = await axios.delete(`/api/short-link/user/logout`, {
-          headers: this.headers, // 请求头信息
+          headers: this.headers,
           params: {
             username: this.headers.username,
             token: this.headers.token,
-          }, // gid 作为查询参数
+          },
         });
         console.log(response.data);
         this.$router.push("/");

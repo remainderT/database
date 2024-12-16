@@ -1,12 +1,12 @@
 <template>
   <div class="container">
-    <h2 style="color:black" class="custom-font">Access Device </h2>
+    <h2 style="color: black" class="custom-font">Access Device</h2>
     <div class="device-container">
-      <div class="device-list">
-        <div v-for="(device, index) in deviceData" :key="index" class="device-item">
-          <div class="device-name" style="color:black">{{ device.name }}</div>
-          <div class="device-count" style="color:black">{{ device.count }}</div>
-          <div class="device-percentage" style="color:black">{{ device.percentage }}%</div>
+        <div class="device-list">
+        <div v-for="(item, index) in deviceData" :key="index" class="device-item">
+          <div class="device-name" style="color:black">{{ item.name }}</div>
+          <div class="device-count" style="color:black">{{ item.count }}</div>
+          <div class="device-percentage" style="color:black">{{ item.percentage*100 }}%</div>
         </div>
       </div>
       <div class="chart-container">
@@ -17,45 +17,61 @@
 </template>
 
 <script>
-import Chart from 'chart.js/auto';
+import Chart from "chart.js/auto";
+import { inject } from "vue";
 
 export default {
   name: "DeviceStat",
   data() {
-    return {
-      deviceData: [
-        { name: 'Computer', count: 2, percentage: 100 },
-      ],
-    };
+    return {deviceData:[]};
   },
   mounted() {
     this.createChart();
   },
   methods: {
-    createChart() {
-  const ctx = this.$refs.chartCanvas.getContext('2d');
-  new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: this.deviceData.map(device => device.name),
-      datasets: [{
-        data: this.deviceData.map(device => device.percentage),
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: {
-            color: 'black', // 设置图例文字颜色为黑色
+      createChart() {
+      this.deviceData = [];
+      const temp = inject("response")._value;
+      console.log(temp);
+      const response = JSON.parse(JSON.stringify(temp));
+          console.log( response );
+          if ( response.data.data != null ) {
+        let sum = 0;
+        for (let i = 0; i < response.data.data.deviceStats.length; i++) {
+            sum += response.data.data.deviceStats[i].cnt;
+        }
+        for (let i = 0; i < response.data.data.deviceStats.length; i++) {
+            this.deviceData.push( {
+                name: response.data.data.deviceStats[ i ].device,
+                percentage: response.data.data.deviceStats[ i ].cnt / sum,
+                count:response.data.data.deviceStats[ i ].cnt
+            } );
+        }
+      }
+      const ctx = this.$refs.chartCanvas.getContext("2d");
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: this.deviceData.map((device) => device.name),
+          datasets: [
+            {
+              data: this.deviceData.map((device) => device.percentage),
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: "black", // 设置图例文字颜色为黑色
               },
+            },
           },
-      },
+        },
+      });
     },
-  });
-}
-
   },
 };
 </script>
