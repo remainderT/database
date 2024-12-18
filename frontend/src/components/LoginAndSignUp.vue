@@ -427,6 +427,7 @@ export default {
   border-radius: 15px 0 0 15px;
 }
 
+
 .auth-image img {
   width: 100%;
   height: 100%;
