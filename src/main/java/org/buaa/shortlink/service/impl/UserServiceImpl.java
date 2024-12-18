@@ -116,7 +116,7 @@ public class  UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements
             if (inserted < 1) {
                 throw new ClientException(USER_SAVE_ERROR);
             }
-            groupService.saveGroup(DEFAULT_GROUP_NAME, requestParam.getUsername());
+            groupService.saveGroup(requestParam.getUsername(), DEFAULT_GROUP_NAME);
         } catch (DuplicateKeyException ex) {
             throw new ClientException(USER_EXIST);
         }
