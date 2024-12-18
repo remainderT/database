@@ -117,6 +117,7 @@
                       :href="`http://${item.fullShortUrl}`"
                       target="_blank"
                       class="custom-font"
+                      @click="click"
                   >
                     {{ `http://${item.fullShortUrl}` }}
                   </a>
@@ -439,7 +440,10 @@ export default {
       this.paginatedData.splice(this.index, 1);
       this.query = true;
     },
-
+    async click() {
+      await this.sleep(1000);
+      this.fetchShortLinks(this.gid);
+    },
     async deleteLink(index, fullShortUrl) {
       try {
         const response = await axios.post(
@@ -891,7 +895,7 @@ export default {
   position: fixed;
   top: 0;
   right: -300px; /* 初始状态在屏幕外 */
-  width: 800px;
+  width: 1400px;
   height: 100%;
   background-color: rgb(255, 255, 255);
   transition: right 0.3s ease-in-out;
