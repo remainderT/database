@@ -77,5 +77,5 @@ public interface UserService extends IService<UserDO> {
      * 用户升级
      *
      */
-    void upGrade();
+    void upGrade(String username);
 }

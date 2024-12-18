@@ -181,13 +181,14 @@ public class  UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements
     }
 
     @Override
-    public void upGrade() {
+    public void upGrade(String username) {
         UserDO userDO = UserDO.builder()
                 .isVip(1)
                 .build();
         LambdaUpdateWrapper<UserDO> updateWrapper = Wrappers.lambdaUpdate(UserDO.class)
-                .eq(UserDO::getUsername, UserContext.getUsername());
+                .eq(UserDO::getUsername, username);
         baseMapper.update(userDO, updateWrapper);
+        tokenCache.evict(username);
     }
 
 }

@@ -114,7 +114,8 @@ public class OrderServiceImpl  extends ServiceImpl<OrderMapper, OrderDO> impleme
                 orderDO.setPayTime(gmtPayment);
                 orderDO.setPayNo(alipayTradeNo);
                 baseMapper.updateById(orderDO);
-                userService.upGrade();
+                String username = orderDO.getUsername();
+                userService.upGrade(username);
             }
         }
     }
