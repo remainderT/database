@@ -22,6 +22,7 @@ import org.buaa.shortlink.dao.entity.UserDO;
 import org.buaa.shortlink.dao.mapper.UserMapper;
 import org.buaa.shortlink.toolkit.FeiShuAlert;
 import org.buaa.shortlink.toolkit.LinkUtil;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -43,7 +44,8 @@ public class UserFlowRiskControlFilter implements Filter {
 
     private final UserMapper baseMapper;
 
-    private final Long maxAccessCount = 2L;
+    @Value("${flow-limit.max-access-count}")
+    private final Long maxAccessCount;
 
     private static final List<String> IGNORE_URI = Lists.newArrayList(
             "/api/short-link/user/login",

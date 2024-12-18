@@ -6,6 +6,7 @@ import org.buaa.shortlink.common.biz.user.LoginCheckFilter;
 import org.buaa.shortlink.common.biz.user.RefreshTokenFilter;
 import org.buaa.shortlink.common.biz.user.UserFlowRiskControlFilter;
 import org.buaa.shortlink.dao.mapper.UserMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,9 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class UserConfiguration {
+
+    @Value("${flow-limit.max-access-count}")
+    private Long maxAccessCount;
 
     /**
      * 刷新 Token 过滤器
@@ -46,7 +50,7 @@ public class UserConfiguration {
     @Bean
     public FilterRegistrationBean<UserFlowRiskControlFilter> globalUserFlowRiskControlFilter(FlowLimitCache flowLimitCache, UserMapper userMapper) {
         FilterRegistrationBean<UserFlowRiskControlFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new UserFlowRiskControlFilter(flowLimitCache, userMapper));
+        registration.setFilter(new UserFlowRiskControlFilter(flowLimitCache, userMapper, maxAccessCount));
         registration.addUrlPatterns("/*");
         registration.setOrder(2);
         return registration;
