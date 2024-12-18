@@ -1,4 +1,3 @@
-
 <template>
   <div class="auth-wrapper">
     <div class="background-animation"></div>
@@ -22,6 +21,9 @@
                     placeholder="Username"
                     v-model="loginForm.username"
                 />
+                <div v-if="loginForm.usernameError" class="error-message">
+                  {{ loginForm.usernameError }}
+                </div>
               </div>
 
               <div class="form-group">
@@ -34,10 +36,13 @@
                       v-model="loginForm.password"
                   />
                   <div class="input-group-append">
-                    <span class="input-group-text" @click="togglePasswordVisibility('login')">
-                      <font-awesome-icon :icon="loginForm.showPassword ? 'eye-slash' : 'eye'" />
-                    </span>
+                  <span class="input-group-text" @click="togglePasswordVisibility('login')">
+                    <font-awesome-icon :icon="loginForm.showPassword ? 'eye-slash' : 'eye'" />
+                  </span>
                   </div>
+                </div>
+                <div v-if="loginForm.passwordError" class="error-message">
+                  {{ loginForm.passwordError }}
                 </div>
               </div>
 
@@ -79,13 +84,13 @@
               </div>
 
               <div class="form-group">
-                <label>mail</label>
+                <label>Mail</label>
                 <input
                     type="mail"
                     class="form-control"
                     placeholder="mail"
                     v-model="signUpForm.mail"
-                    @blur="validatmail"
+                    @blur="validatemail"
                 />
                 <div v-if="signUpForm.mailError" class="error-message">
                   {{ signUpForm.mailError }}
@@ -129,10 +134,13 @@
               <div class="form-group">
                 <label>Verification Code</label>
                 <input
-                    type="password"
+                    type="text"
                     class="form-control"
                     v-model="signUpForm.verificationCode"
                 />
+                <div v-if="signUpForm.verificationCodeError" class="error-message">
+                  {{ signUpForm.verificationCodeError }}
+                </div>
               </div>
 
               <div class="form-group">
@@ -149,6 +157,7 @@
                   }}
                 </button>
               </div>
+
 
               <button type="submit" class="btn btn-primary btn-block">
                 Sign Up
@@ -167,7 +176,7 @@
 </template>
 
 <script>
-import { inject } from "vue";
+import {inject} from "vue";
 export default {
   name: "AuthPage",
   data() {
@@ -179,6 +188,9 @@ export default {
         password: "",
         autoLogin: false,
         showPassword: false,
+        passwordError: "",
+        usernameError: "",
+
       },
       signUpForm: {
         username: "",
@@ -187,6 +199,8 @@ export default {
         confirmPassword: "",
         verificationCode: "",
         mailError: "",
+        usernameError: "",
+        verificationCodeError: "",
         isSendingCode: false,
         countdown: 60,
         showPassword: false,
@@ -199,7 +213,7 @@ export default {
       //切换值
       this.isLogin = !this.isLogin;
     },
-    validatmail() {
+    validatemail() {
       const mailPattern = /^2.*@buaa\.edu\.cn$/;
       if (!mailPattern.test(this.signUpForm.mail)) {
         this.signUpForm.mailError =
@@ -224,34 +238,35 @@ export default {
         }
       }, 1000);
 
-      const mail = this.signUpForm.mail;
-
       try {
-        // send verification to backend
-        const response = await fetch(`/api/short-link/user/send-code?mail=${encodeURIComponent(mail)}`, {
+        const url = `/api/short-link/user/send-code?mail=${encodeURIComponent(this.signUpForm.mail)}`;
+
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "token": this.headers.token,
+            "username": this.signUpForm.username,
           },
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // verification request success
-          alert("Verification code request successfully!");
+          // 验证码请求成功
+          alert("Verification Code has been sent to mail !");
         } else {
-          // verification request failed
-          alert(`Failed to request verification code: ${data.message}`);
+          // 验证码请求失败
+          alert(`Verification code sent failed : ${data.message}`);
         }
       } catch (error) {
-        console.error("Error during sending verification code:", error);
-        alert(
-            "An error occurred while sending the verification code. Please try again later."
-        );
+        console.error("Error when sending Verification Code :", error);
+        alert("Please try again later");
       }
     },
     async handleLogin() {
+      this.loginForm.passwordError = ""; // 清空之前的错误信息
+
       if (!this.loginForm.username || !this.loginForm.password) {
         alert("Please fill in all fields.");
         return;
@@ -263,7 +278,6 @@ export default {
       };
 
       try {
-        // send login request
         const response = await fetch("/api/short-link/user/login", {
           method: "POST",
           headers: {
@@ -275,20 +289,23 @@ export default {
         const data = await response.json();
 
         if (response.ok) {
-          console.log(data);
           this.headers.username = this.loginForm.username;
           this.headers.token = data.data.token;
-          // login success
           alert("Login successful!");
-          // login success jump to home page
           this.$router.push("/home");
         } else {
-          // login failed
-          alert(`Login failed: ${data.message}`);
+          if (data.message.includes("Password is incorrect")) {
+            this.loginForm.passwordError = "Password is incorrect.";
+            console.log("Password error set:", this.loginForm.passwordError);
+          } else {
+            alert(`Login failed: ${data.message}`);
+          }
         }
+
       } catch (error) {
         console.error("Error during login:", error);
-        alert("An error occurred during login. Please try again later.");
+        alert("Login failed : Password is incorrect");
+
       }
     },
     async handleSignUp() {
@@ -317,34 +334,43 @@ export default {
         username: this.signUpForm.username,
         mail: this.signUpForm.mail,
         password: this.signUpForm.password,
-        verificationCode: this.signUpForm.verificationCode,
+        code: this.signUpForm.verificationCode,
       };
 
       try {
-        // send register request
+        console.log("Sending request with data:", requestData);
+
         const response = await fetch("/api/short-link/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "token": this.headers.token,
+            "username": this.signUpForm.username,
           },
           body: JSON.stringify(requestData),
         });
 
         const data = await response.json();
+        console.log("Response from server:", data);
 
-        if (response.ok) {
-          // register success
+        if (data.success) {
           alert("Registration successful!");
           this.toggleForm(); // 切换到登录
         } else {
-          // register failed
-          alert(`Registration failed: ${data.message}`);
+          if (data.message.includes("Verification code")) {
+            this.signUpForm.verificationCodeError = "Verification code is incorrect.";
+          } else if (data.message.includes("Username already exists")) {
+            this.signUpForm.usernameError = "Username already exists.";
+          } else {
+            alert(`Registration failed: ${data.message}`);
+          }
         }
       } catch (error) {
         console.error("Error during registration:", error);
         alert("An error occurred during registration. Please try again later.");
       }
     },
+
     togglePasswordVisibility(formType) {
       if (formType === 'login') {
         this.loginForm.showPassword = !this.loginForm.showPassword;
@@ -371,19 +397,19 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  position: relative; /* 确保背景动画容器定位正确 */
+  position: relative;
 }
 
 .auth-inner {
   width: 800px;
   margin: auto;
-  background: rgba(255, 255, 255, 0.95); /* 增强透明度 */
+  background: rgba(255, 255, 255, 0.95);
   box-shadow: 0px 14px 80px rgba(34, 35, 58, 0.2);
-  padding: 0; /* 去掉内边距 */
+  padding: 0;
   border-radius: 15px;
   transition: all 0.3s;
-  position: relative; /* 确保内容在背景动画之上 */
-  z-index: 1; /* 确保内容在背景动画之上 */
+  position: relative;
+  z-index: 1;
   display: flex;
 }
 
@@ -400,6 +426,7 @@ export default {
   overflow: hidden;
   border-radius: 15px 0 0 15px;
 }
+
 
 .auth-image img {
   width: 100%;
@@ -428,7 +455,6 @@ export default {
   cursor: pointer;
 }
 
-/* 背景动画样式 */
 .background-animation {
   position: absolute;
   top: 0;
