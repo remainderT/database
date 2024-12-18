@@ -40,18 +40,18 @@
           <br />
           <div class="input-container">
             <input
-              v-model="newGroup"
-              type="text"
-              placeholder="Create A New Group"
+                v-model="newGroup"
+                type="text"
+                placeholder="Create A New Group"
             />
             <button class="gradient-button" @click="addNewGroup">+</button>
           </div>
           <br />
           <div v-for="(item, index) in paginatedData" :key="index">
             <button
-              v-if="this.index != index"
-              class="custom-button"
-              @click="Query(item.gid, index, item.name)"
+                v-if="this.index != index"
+                class="custom-button"
+                @click="Query(item.gid, index, item.name)"
             >
               <div v-if="item.name">{{ item.name }}</div>
               <div v-else>group{{ index }}</div>
@@ -80,10 +80,10 @@
             Change Group Name:
           </button>
           <input
-            type="text"
-            class="left"
-            v-model="newGroupName"
-            placeholder="Enter Your New Group Name"
+              type="text"
+              class="left"
+              v-model="newGroupName"
+              placeholder="Enter Your New Group Name"
           />
           <button class="custom-button2 delete" @click="deleteItem">
             Delete This Group
@@ -93,47 +93,53 @@
           <div class="scroll-container">
             <table class="table table-striped table-hover shadow-sm">
               <thead class="thead-dark">
-                <tr>
-                  <th scope="col" class="custom-font">Icon</th>
-                  <th scope="col" class="custom-font">Info</th>
-                  <th scope="col" class="custom-font">FullShortUrl</th>
-                  <th scope="col" class="custom-font">Operation</th>
-                </tr>
+              <tr>
+                <th scope="col" class="custom-font">Icon</th>
+                <th scope="col" class="custom-font">Info</th>
+                <th scope="col" class="custom-font">FullShortUrl</th>
+                <th scope="col" class="custom-font">Pv</th>
+                <th scope="col" class="custom-font">Uv</th>
+                <th scope="col" class="custom-font">Uip</th>
+                <th scope="col" class="custom-font">Operation</th>
+              </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in groupData" :key="index">
-                    <td v-if="item.isPic==1">
-                        <img :src="item.originUrl" class="icon" />
-                    </td>
-                  <td v-else>
-                    <img :src="item.favicon" class="icon" />
-                  </td>
-                  <td class="custom-font">{{ item.describe }}</td>
-                  <td>
-                    <a
+              <tr v-for="(item, index) in groupData" :key="index">
+                <td v-if="item.isPic==1">
+                  <img :src="item.originUrl" class="icon" />
+                </td>
+                <td v-else>
+                  <img :src="item.favicon" class="icon" />
+                </td>
+                <td class="custom-font">{{ item.describe }}</td>
+                <td>
+                  <a
                       :href="`http://${item.fullShortUrl}`"
                       target="_blank"
                       class="custom-font"
-                    >
-                      {{ `http://${item.fullShortUrl}` }}
-                    </a>
-                  </td>
-                  <td class="custom-font">
-                    <button
+                  >
+                    {{ `http://${item.fullShortUrl}` }}
+                  </a>
+                </td>
+                <td class="custom-font">{{ item.totalPv }}</td>
+                <td class="custom-font">{{ item.totalUv }}</td>
+                <td class="custom-font">{{ item.totalUip }}</td>
+                <td class="custom-font">
+                  <button
                       class="custom-button1"
                       @click="deleteLink(index, item.fullShortUrl)"
-                    >
-                      Delete
-                    </button>
-                    &nbsp;
-                    <button
+                  >
+                    Delete
+                  </button>
+                  &nbsp;
+                  <button
                       class="custom-button1"
                       @click="openDrawer(item.fullShortUrl)"
-                    >
-                      Query
-                    </button>
-                  </td>
-                </tr>
+                  >
+                    Query
+                  </button>
+                </td>
+              </tr>
               </tbody>
             </table>
             <div class="custom-font" v-show="length == 0">
@@ -176,7 +182,7 @@ export default {
     GlobalDialog,
     Dashboard,
   },
-    setup() {
+  setup() {
     const nowLink = ref("");
     const dialogVisible = ref(false);
     provide("dialogVisible", dialogVisible);
@@ -187,7 +193,7 @@ export default {
     const pageSize = ref(7);
     const totalItems = ref(1);
     const paginatedData = ref([]);
-        const gid = inject("gid");
+    const gid = inject("gid");
     const isVip = inject("isVip");
     computed(() => {
       const start = (currentPage.value - 1) * pageSize.value;
@@ -206,8 +212,8 @@ export default {
         paginatedData.value = tableData.value.data;
         console.log(paginatedData.value);
         const info = await axios.get(
-          `/api/short-link/user/${headers.username}`,
-          { headers }
+            `/api/short-link/user/${headers.username}`,
+            { headers }
         );
         isVip.value = info.data.data.isVip == 0 ? false : true;
       } catch (error) {
@@ -249,10 +255,10 @@ export default {
     };
 
     provide("link", nowLink);
-        provide( "fetch", fetchShortLinks );
-        provide( "headers", headers );
-        provide( "gid", gid );
-        const name = inject("name");
+    provide( "fetch", fetchShortLinks );
+    provide( "headers", headers );
+    provide( "gid", gid );
+    const name = inject("name");
     return {
       isVip,
       nowLink,
@@ -276,7 +282,7 @@ export default {
       dialogVisible,
       newGroupName,
       length,
-        fetchShortLinks,
+      fetchShortLinks,
       name,
     };
   },
@@ -284,16 +290,16 @@ export default {
     async vip() {
       try {
         const response = await axios.post(
-          "/api/short-link/order/create",
-          {},
-          {
-            headers: this.headers,
-          }
+            "/api/short-link/order/create",
+            {},
+            {
+              headers: this.headers,
+            }
         );
-          console.log(response);
+        console.log(response);
         alert("Ordered Created");
         const id = ref([""]);
-          id.value = response.data.data.id;
+        id.value = response.data.data.id;
         const payResponse = await axios.get("/api/short-link/order/pay", {
           headers: this.headers,
           params: { id: id.value },
@@ -307,13 +313,13 @@ export default {
 
           // 提交表单
           const form = tempDiv.querySelector('form[name="punchout_form"]');
-            if ( form ) {
-                form.submit();
+          if ( form ) {
+            form.submit();
           } else {
             console.error("未找到表单");
           }
           document.body.removeChild(tempDiv);
-        
+
         } else {
           console.error("未获取到有效的表单 HTML");
         }
@@ -327,27 +333,27 @@ export default {
       }
       try {
         const response = await axios.put(
-          "/api/short-link/group",
-          {
-            name: this.newGroupName,
-            gid: this.gid,
-          },
-          {
-            headers: this.headers, // 使用 headers 代替请求头
-          }
+            "/api/short-link/group",
+            {
+              name: this.newGroupName,
+              gid: this.gid,
+            },
+            {
+              headers: this.headers, // 使用 headers 代替请求头
+            }
         );
         console.log(response);
         this.paginatedData[this.index].name = this.newGroupName;
         this.newGroupName = "";
-    
+
         alert("Group Name Changed!");
       } catch (error) {
         alert("Error");
         console.log(error);
       }
     },
-      openDialog() {
-          this.$router.push("/quickStart");
+    openDialog() {
+      this.$router.push("/quickStart");
     },
     start() {
       this.$router.push("/createShortLink");
@@ -388,13 +394,13 @@ export default {
 
       try {
         const response = await axios.post(
-          "/api/short-link/group",
-          {
-            name: this.newGroup, // 使用 newGroup 代替 ss1111
-          },
-          {
-            headers: this.headers, // 使用 headers 代替请求头
-          }
+            "/api/short-link/group",
+            {
+              name: this.newGroup, // 使用 newGroup 代替 ss1111
+            },
+            {
+              headers: this.headers, // 使用 headers 代替请求头
+            }
         );
         console.log(response);
         this.initialize();
@@ -404,19 +410,19 @@ export default {
     },
     Home() {
       this.query = false;
-      },
+    },
     sleep(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     },
     async  Query( gid, index, name ) {
       await this.sleep(500);
-        this.fetchShortLinks( gid );
-        this.gid = gid;
+      this.fetchShortLinks( gid );
+      this.gid = gid;
       if (this.query) {
         this.query = false;
       }
-        this.index = index;
-        this.name = name;
+      this.index = index;
+      this.name = name;
     },
     async deleteItem() {
       try {
@@ -437,14 +443,14 @@ export default {
     async deleteLink(index, fullShortUrl) {
       try {
         const response = await axios.post(
-          "/api/short-link/recycle-bin/save",
-          {
-            gid: this.gid,
-            fullShortUrl: fullShortUrl,
-          },
-          {
-            headers: this.headers, // 使用 headers 代替请求头
-          }
+            "/api/short-link/recycle-bin/save",
+            {
+              gid: this.gid,
+              fullShortUrl: fullShortUrl,
+            },
+            {
+              headers: this.headers, // 使用 headers 代替请求头
+            }
         );
         console.log(response);
         this.fetchShortLinks(this.gid);
